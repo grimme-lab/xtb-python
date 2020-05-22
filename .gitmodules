@@ -1,0 +1,3 @@
+[submodule "subprojects/xtb"]
+	path = subprojects/xtb
+	url = https://github.com/grimme-lab/xtb.git

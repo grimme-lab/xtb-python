@@ -1,0 +1,32 @@
+language: python
+python:
+   - 3.7
+   - 3.8
+
+os: linux
+dist: bionic
+addons:
+   apt:
+      packages:
+         - libblas-dev
+         - liblapack-dev
+         - gfortran
+         - python-pip
+
+before_install:
+   - uname -a
+   - df -h
+   - ulimit -a
+   - python -V
+
+install:
+   - pip3 install -U meson ninja pytest pytest-cov codecov numpy cffi
+   - meson setup build --prefix=$PWD --libdir=xtb -Dla_backend=netlib
+   - ninja -C build install
+   - pip install -e .
+
+script:
+   - pytest -v --cov=xtb tests/
+
+after_success:
+   - codecov
