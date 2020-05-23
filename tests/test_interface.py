@@ -79,6 +79,14 @@ def test_molecule():
     # Construct real molecule
     mol = Molecule(numbers, positions)
 
+    # Try to update a structure with missmatched coordinates
+    with raises(ValueError, match="Dimension missmatch for positions"):
+        mol.update(np.random.rand(7))
+
+    # Try to add a missmatched lattice
+    with raises(ValueError, match="Invalid lattice provided"):
+        mol.update(positions, np.random.rand(7))
+
     # Try to update a structure with nuclear fusion coordinates
     with raises(XTBException, match="Could not update"):
         mol.update(np.zeros((24, 3)))
@@ -247,8 +255,11 @@ def test_gfn1_xtb():
 
     res = Results(calc)
 
-    # check if we cannot retrieve properties from the result
-    with raises(XTBException):
+    # check if we cannot retrieve properties from the unallocated result
+    with raises(XTBException, match="Virial is not available"):
+        res.get_virial()
+    res.show("Release error log")
+    with raises(XTBException, match="Bond orders are not available"):
         res.get_bond_orders()
     res.show("Release error log")
 
