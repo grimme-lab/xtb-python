@@ -26,6 +26,9 @@ except ImportError:
     raise Exception("xtb C extension unimportable, cannot use C-API")
 
 
+class XTBException(Exception): ...
+
+
 class Param(Enum):
     """Possible parametrisations for the Calculator class"""
 
@@ -33,6 +36,11 @@ class Param(Enum):
     GFN1xTB = auto()
     GFN0xTB = auto()
     GFNFF = auto()
+
+
+VERBOSITY_FULL = 2
+VERBOSITY_MINIMAL = 1
+VERBOSITY_MUTED = 0
 
 
 class Environment:
@@ -56,12 +64,12 @@ class Environment:
 
     def show(self, message: str) -> None:
         """Show and empty error stack"""
-        _message = _ffi.new("char[]", message)
+        _message = _ffi.new("char[]", message.encode())
         _lib.xtb_showEnvironment(self._env, _message)
 
     def set_output(self, filename: str) -> None:
         """Bind output from this environment"""
-        _filename = _ffi.new("char[]", filename)
+        _filename = _ffi.new("char[]", filename.encode())
         _lib.xtb_setOutput(self._env, _filename)
 
     def release_output(self) -> None:
@@ -128,7 +136,7 @@ class Molecule(Environment):
         )
 
         if self.check() != 0:
-            raise ValueError("Could not initialize molecular structure data")
+            raise XTBException("Could not initialize molecular structure data")
 
     def __del__(self):
         """Delete molecular structure data"""
@@ -145,7 +153,7 @@ class Molecule(Environment):
     ):
         """Update coordinates and lattice parameters"""
 
-        if 3 * len(self) != len(positions):
+        if 3 * len(self) != positions.size:
             raise ValueError("Dimension missmatch for postions")
         _positions = np.array(positions, dtype="float")
 
@@ -154,7 +162,7 @@ class Molecule(Environment):
                 raise ValueError("Invalid lattice provided")
             _lattice = np.array(lattice, dtype="float")
         else:
-            _lattice = _ffi.NULL
+            _lattice = None
 
         _lib.xtb_updateMolecule(
             self._env,
@@ -164,7 +172,7 @@ class Molecule(Environment):
         )
 
         if self.check() != 0:
-            raise ValueError("Could not update molecular structure data")
+            raise XTBException("Could not update molecular structure data")
 
 
 class Results(Environment):
@@ -193,7 +201,7 @@ class Results(Environment):
         _energy = _ffi.new("double *")
         _lib.xtb_getEnergy(self._env, self._res, _energy)
         if self.check() != 0:
-            raise ValueError("Energy is not available")
+            raise XTBException("Energy is not available")
         return _energy[0]
 
     def get_gradient(self):
@@ -201,7 +209,7 @@ class Results(Environment):
         _gradient = np.zeros((len(self), 3))
         _lib.xtb_getGradient(self._env, self._res, _cast("double*", _gradient))
         if self.check() != 0:
-            raise ValueError("Gradient is not available")
+            raise XTBException("Gradient is not available")
         return _gradient
 
     def get_virial(self):
@@ -209,7 +217,7 @@ class Results(Environment):
         _virial = np.zeros((3, 3))
         _lib.xtb_getVirial(self._env, self._res, _cast("double*", _virial))
         if self.check() != 0:
-            raise ValueError("Virial is not available")
+            raise XTBException("Virial is not available")
         return _virial
 
     def get_dipole(self):
@@ -217,7 +225,7 @@ class Results(Environment):
         _dipole = np.zeros(3)
         _lib.xtb_getDipole(self._env, self._res, _cast("double*", _dipole))
         if self.check() != 0:
-            raise ValueError("Dipole is not available")
+            raise XTBException("Dipole is not available")
         return _dipole
 
     def get_charges(self):
@@ -225,7 +233,7 @@ class Results(Environment):
         _charges = np.zeros(len(self))
         _lib.xtb_getCharges(self._env, self._res, _cast("double*", _charges))
         if self.check() != 0:
-            raise ValueError("Charges are not available")
+            raise XTBException("Charges are not available")
         return _charges
 
     def get_bond_orders(self):
@@ -233,7 +241,7 @@ class Results(Environment):
         _bond_orders = np.zeros((len(self), len(self)))
         _lib.xtb_getBondOrders(self._env, self._res, _cast("double*", _bond_orders))
         if self.check() != 0:
-            raise ValueError("Bond orders are not available")
+            raise XTBException("Bond orders are not available")
         return _bond_orders
 
 
@@ -281,7 +289,7 @@ class Calculator(Molecule):
         )
 
         if self.check() != 0:
-            raise ValueError("Could not load parametrisation data")
+            raise XTBException("Could not load parametrisation data")
 
     def singlepoint(self, res: Optional[Results] = None) -> Results:
         """Perform singlepoint calculation"""
@@ -292,7 +300,7 @@ class Calculator(Molecule):
         )
 
         if self.check() != 0:
-            raise ValueError("Single point calculation failed")
+            raise XTBException("Single point calculation failed")
 
         return _res
 
