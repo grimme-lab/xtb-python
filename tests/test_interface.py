@@ -19,6 +19,7 @@ from xtb.interface import (
     XTBException,
     Molecule,
     Calculator,
+    Results,
     Param,
     VERBOSITY_MINIMAL,
 )
@@ -167,7 +168,8 @@ def test_gfn2_xtb():
     calc.set_verbosity(VERBOSITY_MINIMAL)
     assert calc.check() == 0
 
-    res = calc.singlepoint()
+    res = Results(calc)
+    calc.singlepoint(res)
 
     assert approx(res.get_energy(), thr) == -42.14746312757416
     assert approx(res.get_gradient(), thr) == gradient
@@ -240,8 +242,18 @@ def test_gfn1_xtb():
     )
     dipole = np.array([-0.81941935,  1.60912848,  0.00564382])
 
+
     calc = Calculator(Param.GFN1xTB, numbers, positions)
-    res = calc.singlepoint()
+
+    res = Results(calc)
+
+    # check if we cannot retrieve properties from the result
+    with raises(XTBException):
+        res.get_bond_orders()
+    res.show("Release error log")
+
+    # Start calculation by restarting with result
+    calc.singlepoint(res)
 
     assert approx(res.get_energy(), thr) == -44.509702418208896
     assert approx(res.get_gradient(), thr) == gradient
