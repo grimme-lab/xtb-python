@@ -1,6 +1,19 @@
 Python API for the extended tight binding program
 =================================================
 
+.. image:: https://img.shields.io/github/license/grimme-lab/xtb-python
+   :alt: License
+   :target: COPYING.LESSER
+.. image:: https://travis-ci.com/grimme-lab/xtb-python.svg?branch=master
+   :alt: Travis CI
+   :target: https://travis-ci.com/grimme-lab/xtb-python
+.. image:: https://img.shields.io/lgtm/grade/python/g/grimme-lab/xtb-python.svg
+   :alt: LGTM
+   :target: https://lgtm.com/projects/g/grimme-lab/xtb-python/context:python
+.. image:: https://codecov.io/gh/grimme-lab/xtb-python/branch/master/graph/badge.svg
+   :alt: Codecov
+   :target: https://codecov.io/gh/grimme-lab/xtb-python
+
 This repository host the Python API for the extended tight binding (``xtb``) program.
 
 The idea of this project is to provide the ``xtb`` API for Python *without*
@@ -24,7 +37,7 @@ project, in summary it requires a Fortran and a C compiler as well as a
 linear algebra backend. Make yourself familiar with building ``xtb`` first!
 
 Additionally this project requires a development version of Python installed.
-Also ensure that you have the ``numpy`` and ``cffi`` package installed,
+Also ensure that you have the ``numpy`` and ``cffi`` packages installed,
 configure the build of the extension with:
 
 .. code::
@@ -33,11 +46,17 @@ configure the build of the extension with:
    ninja -C build install
 
 If you have several versions of Python installed you can point meson with
-the ``-Dpy=<version>`` to the correct one.
-This will create the CFFI module ``xtb._libxtb``.
+the ``-Dpy=<version>`` option to the correct one.
+This will create the CFFI extension ``_libxtb`` and place it in the ``xtb``
+directory.
 
-After creating the ``_libxtb`` extension, the python module can be installed
-as usual
+In case meson fails to configure or build, check the options for ``-Dla_backed``
+and ``-Dopenmp`` which are passed to the ``xtb`` subproject.
+For more information on the build with meson, follow the guide in the ``xtb``
+repository `here <https://github.com/grimme-lab/xtb/blob/master/meson/README.adoc>`_.
+
+After creating the ``_libxtb`` extension, the Python module can be installed
+as usual with
 
 .. code::
 
