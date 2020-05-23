@@ -15,14 +15,96 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
 
-from xtb.interface import Calculator, Param
-from pytest import approx
+from xtb.interface import (
+    XTBException,
+    Molecule,
+    Calculator,
+    Results,
+    Param,
+    VERBOSITY_MINIMAL,
+)
+from pytest import approx, raises
 import numpy as np
+
+
+def test_molecule():
+    """check if the molecular structure data is working as expected."""
+
+    numbers = np.array(
+        [6, 7, 6, 7, 6, 6, 6, 8, 7, 6, 8, 7, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    )
+    positions = np.array(
+        [
+            [ 2.02799738646442, 0.09231312124713,-0.14310895950963],
+            [ 4.75011007621000, 0.02373496014051,-0.14324124033844],
+            [ 6.33434307654413, 2.07098865582721,-0.14235306905930],
+            [ 8.72860718071825, 1.38002919517619,-0.14265542523943],
+            [ 8.65318821103610,-1.19324866489847,-0.14231527453678],
+            [ 6.23857175648671,-2.08353643730276,-0.14218299370797],
+            [ 5.63266886875962,-4.69950321056008,-0.13940509630299],
+            [ 3.44931709749015,-5.48092386085491,-0.14318454855466],
+            [ 7.77508917214346,-6.24427872938674,-0.13107140408805],
+            [10.30229550927022,-5.39739796609292,-0.13672168520430],
+            [12.07410272485492,-6.91573621641911,-0.13666499342053],
+            [10.70038521493902,-2.79078533715849,-0.14148379504141],
+            [13.24597858727017,-1.76969072232377,-0.14218299370797],
+            [ 7.40891694074004,-8.95905928176407,-0.11636933482904],
+            [ 1.38702118184179, 2.05575746325296,-0.14178615122154],
+            [ 1.34622199478497,-0.86356704498496, 1.55590600570783],
+            [ 1.34624089204623,-0.86133716815647,-1.84340893849267],
+            [ 5.65596919189118, 4.00172183859480,-0.14131371969009],
+            [14.67430918222276,-3.26230980007732,-0.14344911021228],
+            [13.50897177220290,-0.60815166181684, 1.54898960808727],
+            [13.50780014200488,-0.60614855212345,-1.83214617078268],
+            [ 5.41408424778406,-9.49239668625902,-0.11022772492007],
+            [ 8.31919801555568,-9.74947502841788, 1.56539243085954],
+            [ 8.31511620712388,-9.76854236502758,-1.79108242206824],
+        ]
+    )
+    filename = "xtb-error.log"
+    message = "Expecting nuclear fusion warning"
+
+    # Constructor should raise an error for nuclear fusion input
+    with raises(XTBException, match="Could not initialize"):
+        mol = Molecule(numbers, np.zeros((24, 3)))
+
+    # The Python class should protect from garbage input like this
+    with raises(ValueError, match="Dimension missmatch"):
+        mol = Molecule(np.array([1, 1, 1]), positions)
+
+    # Also check for sane coordinate input
+    with raises(ValueError, match="Expected tripels"):
+        mol = Molecule(numbers, np.random.rand(7))
+
+    # Construct real molecule
+    mol = Molecule(numbers, positions)
+
+    # Try to update a structure with missmatched coordinates
+    with raises(ValueError, match="Dimension missmatch for positions"):
+        mol.update(np.random.rand(7))
+
+    # Try to add a missmatched lattice
+    with raises(ValueError, match="Invalid lattice provided"):
+        mol.update(positions, np.random.rand(7))
+
+    # Try to update a structure with nuclear fusion coordinates
+    with raises(XTBException, match="Could not update"):
+        mol.update(np.zeros((24, 3)))
+
+    # Redirect API output to file
+    mol.set_output(filename)
+
+    # Flush the error from the environment log
+    mol.show(message)
+
+    # Reset to correct positions, Molecule object should still be intact
+    mol.update(positions)
 
 
 def test_gfn2_xtb():
     """check if the GFN2-xTB interface is working correctly."""
     thr = 1.0e-8
+    thr2 = 1.0e-6
 
     numbers = np.array(
         [6, 7, 6, 7, 6, 6, 6, 8, 7, 6, 8, 7, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -83,17 +165,29 @@ def test_gfn2_xtb():
             [ 3.81284918e-04,-1.28923994e-04,-2.34336886e-03],
         ]
     )
+    charges = np.array([
+        -0.05445590, -0.00457526,  0.08391889, -0.27870751,  0.11914924,
+        -0.02621044,  0.26115960, -0.44071824, -0.10804747,  0.30411699,
+        -0.44083760, -0.07457706, -0.04790859, -0.03738239,  0.06457802,
+         0.08293905,  0.08296802,  0.05698136,  0.09025556,  0.07152988,
+         0.07159003,  0.08590674,  0.06906357,  0.06926350])
 
     calc = Calculator(Param.GFN2xTB, numbers, positions)
-    res = calc.singlepoint()
+    calc.set_verbosity(VERBOSITY_MINIMAL)
+    assert calc.check() == 0
+
+    res = Results(calc)
+    calc.singlepoint(res)
 
     assert approx(res.get_energy(), thr) == -42.14746312757416
     assert approx(res.get_gradient(), thr) == gradient
+    assert approx(res.get_charges(), thr2) == charges
 
 
 def test_gfn1_xtb():
     """check if the GFN1-xTB interface is working correctly."""
     thr = 1.0e-8
+    thr2 = 1.0e-6
 
     numbers = np.array(
         [6, 7, 6, 7, 6, 6, 6, 8, 7, 6, 8, 7, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -154,9 +248,24 @@ def test_gfn1_xtb():
             [ 2.89640303e-04,-2.09943109e-04,-1.35065134e-03],
         ]
     )
+    dipole = np.array([-0.81941935,  1.60912848,  0.00564382])
+
 
     calc = Calculator(Param.GFN1xTB, numbers, positions)
-    res = calc.singlepoint()
+
+    res = Results(calc)
+
+    # check if we cannot retrieve properties from the unallocated result
+    with raises(XTBException, match="Virial is not available"):
+        res.get_virial()
+    res.show("Release error log")
+    with raises(XTBException, match="Bond orders are not available"):
+        res.get_bond_orders()
+    res.show("Release error log")
+
+    # Start calculation by restarting with result
+    calc.singlepoint(res)
 
     assert approx(res.get_energy(), thr) == -44.509702418208896
     assert approx(res.get_gradient(), thr) == gradient
+    assert approx(res.get_dipole(), thr2) == dipole
