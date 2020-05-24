@@ -176,8 +176,7 @@ def test_gfn2_xtb():
     calc.set_verbosity(VERBOSITY_MINIMAL)
     assert calc.check() == 0
 
-    res = Results(calc)
-    calc.singlepoint(res)
+    res = calc.singlepoint()
 
     assert approx(res.get_energy(), thr) == -42.14746312757416
     assert approx(res.get_gradient(), thr) == gradient
@@ -264,7 +263,7 @@ def test_gfn1_xtb():
     res.show("Release error log")
 
     # Start calculation by restarting with result
-    calc.singlepoint(res)
+    res = calc.singlepoint(res)
 
     assert approx(res.get_energy(), thr) == -44.509702418208896
     assert approx(res.get_gradient(), thr) == gradient
