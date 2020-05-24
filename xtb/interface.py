@@ -23,7 +23,7 @@ import numpy as np
 try:
     from ._libxtb import ffi as _ffi, lib as _lib
 except ImportError:
-    raise Exception("xtb C extension unimportable, cannot use C-API")
+    raise ImportError("xtb C extension unimportable, cannot use C-API")
 
 
 class XTBException(Exception): ...
