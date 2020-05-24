@@ -91,7 +91,7 @@ def _new_results():
     return _ffi.gc(_lib.xtb_newResults(), _delete_results)
 
 
-def _delete_calculator(self):
+def _delete_calculator(calc):
     """Delete calculator object"""
     ptr = _ffi.new("xtb_TCalculator *")
     ptr[0], calc = calc, _ffi.NULL
