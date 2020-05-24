@@ -76,10 +76,19 @@ class XTB(ase.Calculator):
         ase.Calculator.calculate(self, atoms, properties, system_changes)
 
         try:
+            if self.atoms.cell.size == 9:
+                _cell = self.atoms.cell
+            elif self.atoms.cell.size == 3:
+                _cell = np.diag(self.atoms.cell)
+            else:
+                _cell = None
+
             self._xtb = Calculator(
                 self.parameters.method,
                 self.atoms.numbers,
-                self.atoms.positions,
+                self.atoms.positions / Bohr,
+                lattice=_cell / Bohr,
+                periodic=self.atoms.pbc,
             )
         except XTBException as ee:
             raise ase.InputError("Cannot construct calculator for xtb")
