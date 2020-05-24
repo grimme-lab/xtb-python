@@ -196,7 +196,7 @@ class Molecule(Environment):
         return self._natoms
 
     def update(
-        self, positions: List[float], lattice: Optional[List[float]] = None,
+        self, positions: np.ndarray, lattice: Optional[np.ndarray] = None,
     ):
         """Update coordinates and lattice parameters"""
 
@@ -205,7 +205,7 @@ class Molecule(Environment):
         _positions = np.array(positions, dtype="float")
 
         if lattice is not None:
-            if len(lattice) != 9:
+            if lattice.size != 9:
                 raise ValueError("Invalid lattice provided")
             _lattice = np.array(lattice, dtype="float")
         else:

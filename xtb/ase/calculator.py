@@ -22,6 +22,7 @@ from ..interface import Calculator, Param, XTBException
 import ase.calculators.calculator as ase
 from ase.atoms import Atoms
 from ase.units import Hartree, Bohr
+import numpy as np
 
 
 class XTB(ase.Calculator):
@@ -31,6 +32,8 @@ class XTB(ase.Calculator):
         "energy",
         "forces",
         "charges",
+        "dipole",
+        "stress",
     ]
 
     default_options = {
@@ -41,15 +44,11 @@ class XTB(ase.Calculator):
     _xtb = None
 
     def __init__(
-        self,
-        atoms: Optional[Atoms] = None,
-        **kwargs,
+        self, atoms: Optional[Atoms] = None, **kwargs,
     ):
-        """Construct the XTB base calculator object."""
+        """Construct the xtb base calculator object."""
 
-        ase.Calculator.__init__(
-            self, atoms=atoms, **kwargs
-        )
+        ase.Calculator.__init__(self, atoms=atoms, **kwargs)
 
         # loads the default parameters and updates with actual values
         self.parameters = self.get_default_parameters()
@@ -57,11 +56,21 @@ class XTB(ase.Calculator):
         self.set(**kwargs)
 
     def set(self, **kwargs):
-        """"""
+        """Set new parameters to xtb"""
 
         changed_parameters = ase.Calculator.set(self, **kwargs)
 
+        # Always reset the xtb calculator for now
+        if changed_parameters:
+            self.reset()
+
         return changed_parameters
+
+    def reset(self):
+        """Clear all information from old calculation"""
+        ase.Calculator.reset(self)
+
+        self._res = None
 
     def calculate(
         self,
@@ -69,38 +78,59 @@ class XTB(ase.Calculator):
         properties: List[str] = None,
         system_changes: List[str] = ase.all_changes,
     ):
-        """"""
+        """Perform actual calculation with by calling the xtb API"""
 
         if not properties:
-            properties = ['energy']
+            properties = ["energy"]
         ase.Calculator.calculate(self, atoms, properties, system_changes)
 
         try:
-            if self.atoms.cell.size == 9:
-                _cell = self.atoms.cell
-            elif self.atoms.cell.size == 3:
-                _cell = np.diag(self.atoms.cell)
-            else:
-                _cell = None
+            _cell = _get_cell(self.atoms.cell)
+            _periodic = self.atoms.pbc
+            _charge = self.atoms.get_initial_charges().sum()
+            _uhf = int(self.atoms.get_initial_magnetic_moments().sum().round())
 
             self._xtb = Calculator(
                 self.parameters.method,
                 self.atoms.numbers,
                 self.atoms.positions / Bohr,
-                lattice=_cell / Bohr,
-                periodic=self.atoms.pbc,
+                _charge,
+                _uhf,
+                _cell / Bohr,
+                _periodic,
             )
-        except XTBException as ee:
+
+        except XTBException:
             raise ase.InputError("Cannot construct calculator for xtb")
-        except ValueError:
-            raise ase.InputError("Invalid geometry input for xtb calculator")
 
         try:
             self._res = self._xtb.singlepoint(self._res)
-        except XTBException as ee:
-            self._xtb.show(ee.value)
+        except XTBException:
+            self._xtb.show("Single point calculation failed")
             raise ase.CalculationFailed("xtb could not evaluate input")
 
+        # These properties are garanteed to exist for all implemented calculators
         self.results["energy"] = self._res.get_energy() * Hartree
-        self.results["forces"] = -self._res.get_gradient() * Hartree/Bohr
-        self.results["charges"] = self._res.get_charges()
+        self.results["free_energy"] = self.results["energy"]
+        self.results["forces"] = -self._res.get_gradient() * Hartree / Bohr
+        self.results["dipole"] = self._res.get_dipole() * Bohr
+        # stress tensor is only returned for periodic systems
+        if self.atoms.pbc.any():
+            _stress = self._res.get_virial() * Hartree / self.atoms.get_volume()
+            self.results["stress"] = _stress.flat[[0, 4, 8, 5, 2, 1]]
+        # Not all xtb calculators provide access to partial charges yet,
+        # this is mainly an issue for the GFN-FF calculator
+        try:
+            self.results["charges"] = self._res.get_charges()
+        except XTBException:
+            self._xtb.show("Charges not provided by calculator")
+
+
+def _get_cell(cell: np.ndarray) -> Optional[np.ndarray]:
+    """Transform ASE cell object to lattice"""
+
+    if cell.size == 9:
+        return cell
+    if cell.size == 3:
+        return np.diag(cell)
+    return None
