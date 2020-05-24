@@ -7,6 +7,9 @@ Python API for the extended tight binding program
 .. image:: https://travis-ci.com/grimme-lab/xtb-python.svg?branch=master
    :alt: Travis CI
    :target: https://travis-ci.com/grimme-lab/xtb-python
+.. image:: https://readthedocs.org/projects/xtb-python/badge/?version=latest
+   :alt: Documentation Status
+   :target: https://xtb-python.readthedocs.io/en/latest/?badge=latest
 .. image:: https://img.shields.io/lgtm/grade/python/g/grimme-lab/xtb-python.svg
    :alt: LGTM
    :target: https://lgtm.com/projects/g/grimme-lab/xtb-python/context:python
