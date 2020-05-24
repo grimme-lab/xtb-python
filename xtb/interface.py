@@ -23,7 +23,7 @@ import numpy as np
 try:
     from ._libxtb import ffi as _ffi, lib as _lib
 except ImportError:
-    raise Exception("xtb C extension unimportable, cannot use C-API")
+    raise ImportError("xtb C extension unimportable, cannot use C-API")
 
 
 class XTBException(Exception): ...
@@ -146,8 +146,8 @@ class Molecule(Environment):
         positions: np.ndarray,
         charge: Optional[float] = None,
         uhf: Optional[int] = None,
-        lattice: Optional[List[float]] = None,
-        periodic: Optional[List[bool]] = None,
+        lattice: Optional[np.ndarray] = None,
+        periodic: Optional[np.ndarray] = None,
     ):
         """Create new molecular structure data"""
         Environment.__init__(self)
@@ -165,14 +165,14 @@ class Molecule(Environment):
         _uhf = _ref("int", uhf)
 
         if lattice is not None:
-            if len(lattice) != 9:
+            if lattice.size != 9:
                 raise ValueError("Invalid lattice provided")
             _lattice = np.array(lattice, dtype="float")
         else:
             _lattice = None
 
         if periodic is not None:
-            if len(periodic) != 3:
+            if periodic.size != 3:
                 raise ValueError("Invalid periodicity provided")
             _periodic = np.array(periodic, dtype="bool")
         else:
@@ -196,7 +196,7 @@ class Molecule(Environment):
         return self._natoms
 
     def update(
-        self, positions: List[float], lattice: Optional[List[float]] = None,
+        self, positions: np.ndarray, lattice: Optional[np.ndarray] = None,
     ):
         """Update coordinates and lattice parameters"""
 
@@ -205,7 +205,7 @@ class Molecule(Environment):
         _positions = np.array(positions, dtype="float")
 
         if lattice is not None:
-            if len(lattice) != 9:
+            if lattice.size != 9:
                 raise ValueError("Invalid lattice provided")
             _lattice = np.array(lattice, dtype="float")
         else:
