@@ -85,7 +85,7 @@ class XTB(ase.Calculator):
         ase.Calculator.calculate(self, atoms, properties, system_changes)
 
         try:
-            _cell = _get_cell(self.atoms.cell)
+            _cell = self.atoms.cell
             _periodic = self.atoms.pbc
             _charge = self.atoms.get_initial_charges().sum()
             _uhf = int(self.atoms.get_initial_magnetic_moments().sum().round())
@@ -124,13 +124,3 @@ class XTB(ase.Calculator):
             self.results["charges"] = self._res.get_charges()
         except XTBException:
             self._xtb.show("Charges not provided by calculator")
-
-
-def _get_cell(cell: np.ndarray) -> Optional[np.ndarray]:
-    """Transform ASE cell object to lattice"""
-
-    if cell.size == 9:
-        return cell
-    if cell.size == 3:
-        return np.diag(cell)
-    return None

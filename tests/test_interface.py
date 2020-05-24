@@ -98,7 +98,7 @@ def test_molecule():
     mol.show(message)
 
     # Reset to correct positions, Molecule object should still be intact
-    mol.update(positions)
+    mol.update(positions, np.zeros((3, 3)))
 
 
 def test_gfn2_xtb_0d():
