@@ -33,9 +33,61 @@ class Param(Enum):
     """Possible parametrisations for the Calculator class"""
 
     GFN2xTB = auto()
+    """Self-consistent extended tight binding Hamiltonian with
+    anisotropic second order electrostatic contributions,
+    third order on-site contributions and self-consistent D4 dispersion.
+
+    Geometry, frequency and non-covalent interactions parametrisation for
+    elements up to Z=86.
+
+    Cite as:
+    C. Bannwarth, S. Ehlert and S. Grimme.,
+    J. Chem. Theory Comput., 2019, 15, 1652-1671.
+    DOI: `10.1021/acs.jctc.8b01176 <https://dx.doi.org/10.1021/acs.jctc.8b01176>`_
+    """
+
     GFN1xTB = auto()
+    """Self-consistent extended tight binding Hamiltonian with
+    isotropic second order electrostatic contributions and
+    third order on-site contributions.
+
+    Geometry, frequency and non-covalent interactions parametrisation for
+    elements up to Z=86.
+
+    Cite as:
+    S. Grimme, C. Bannwarth, P. Shushkov,
+    *J. Chem. Theory Comput.*, 2017, 13, 1989-2009.
+    DOI: `10.1021/acs.jctc.7b00118 <https://dx.doi.org/10.1021/acs.jctc.7b00118>`_
+    """
+
     GFN0xTB = auto()
+    """Experimental non-self-consistent extended tight binding Hamiltonian
+    using classical electronegativity equilibration electrostatics and
+    extended Hückel Hamiltonian.
+
+    Geometry, frequency and non-covalent interactions parametrisation for
+    elements up to Z=86.
+
+    Requires the param_gfn0-xtb.txt parameter file in the ``XTBPATH``
+    environment variable to load!
+
+    See:
+    P. Pracht, E. Caldeweyher, S. Ehlert, S. Grimme,
+    ChemRxiv, 2019, preprint.
+    DOI: `10.26434/chemrxiv.8326202.v1 <https://dx.doi.org/10.26434/chemrxiv.8326202.v1>`_
+    """
+
     GFNFF = auto()
+    """General force field parametrized for geometry, frequency and non-covalent
+    interactions up to Z=86
+
+    ``xtb`` API support is currently experimental.
+
+    Cite as:
+    S. Spicher and S. Grimme,
+    Angew. Chem. Int. Ed., 2020, accepted article.
+    DOI: `10.1002/anie.202004239 <https://dx.doi.org/10.1002/anie.202004239>`_
+    """
 
 
 VERBOSITY_FULL = 2
@@ -104,7 +156,27 @@ def _new_calculator():
 
 
 class Environment:
-    """Calculation environment"""
+    """Calculation environment
+
+    Wraps an API object representing a TEnvironment class in ``xtb``.
+    The API object is constructed automatically and deconstructed on garbage
+    collection, it stores the IO configuration and the error log of the API.
+
+    All API calls require an environment object, usually this is done
+    automatically as all other classes inherent from the calculation
+    environment.
+
+    Example
+    -------
+    >>> from xtb.interface import Environment, VERBOSITY_FULL
+    >>> env = Environment()
+    >>> env.set_output("error.log")
+    >>> env.set_verbosity(VERBOSITY_FULL)
+    >>> if env.check != 0:
+    ...     env.show("Error message")
+    ...
+    >>> env.release_output()
+    """
 
     _env = _ffi.NULL
 
@@ -113,7 +185,13 @@ class Environment:
         self._env = _new_environment()
 
     def check(self) -> int:
-        """Check current status of calculation environment"""
+        """Check current status of calculation environment
+
+        Example
+        -------
+        >>> if env.check() != 0:
+        ...     raise XTBException("Error occured in the API")
+        """
         return _lib.xtb_checkEnvironment(self._env)
 
     def show(self, message: str) -> None:
@@ -136,7 +214,42 @@ class Environment:
 
 
 class Molecule(Environment):
-    """Molecular structure data"""
+    """Molecular structure data
+
+    Represents a wrapped TMolecule API object in ``xtb``.
+    The molecular structure data object has a fixed number of atoms and
+    immutable atomic identifiers.
+
+    Example
+    -------
+    >>> from xtb.interface import Molecule
+    >>> import numpy as np
+    >>> numbers = np.array([8, 1, 1])
+    >>> positions = np.array([
+    ... [ 0.00000000000000, 0.00000000000000,-0.73578586109551],
+    ... [ 1.44183152868459, 0.00000000000000, 0.36789293054775],
+    ... [-1.44183152868459, 0.00000000000000, 0.36789293054775]])
+    ...
+    >>> mol = Molecule(numbers, positions)
+    >>> len(mol)
+    3
+    >>> mol.update(np.zeros(len(mol), 3))  # will fail nuclear fusion check
+    xtb.interface.XTBException: Could not update molecular structure data
+    >>> mol.show("API message log")  # API error log must be cleared!
+    ########################################################################
+    [ERROR] API message log
+    -1- xtb_api_updateMolecule: Could not update molecular structure
+    ########################################################################
+    >>> mol.update(positions)
+
+    Raises
+    ------
+    ValueError
+        on invalid input on the Python side of the API
+
+    XTBException
+        on errors returned from the API
+    """
 
     _mol = _ffi.NULL
 
@@ -198,7 +311,23 @@ class Molecule(Environment):
     def update(
         self, positions: np.ndarray, lattice: Optional[np.ndarray] = None,
     ):
-        """Update coordinates and lattice parameters"""
+        """Update coordinates and lattice parameters, both provided in
+        atomic units (Bohr).
+        The lattice update is optional also for periodic structures.
+
+        Generally, only the cartesian coordinates and the lattice parameters
+        can be updated, every other modification, regarding total charge,
+        total spin, boundary condition, atomic types or number of atoms
+        requires the complete reconstruction of the object.
+
+        Raises
+        ------
+        ValueError
+            on invalid input on the Python side of the API
+
+        XTBException
+            on errors returned from the API, usually from nuclear fusion check
+        """
 
         if 3 * len(self) != positions.size:
             raise ValueError("Dimension missmatch for positions")
@@ -223,7 +352,60 @@ class Molecule(Environment):
 
 
 class Results(Environment):
-    """Calculation results"""
+    """Calculation results
+
+    Holds ``xtb`` API object containing results from a single point calculation.
+    It can be queried for indiviual properties or used to restart calculations.
+    Note that results from different methods are generally incompatible, the
+    API tries to be as clever as possible about this and will usually
+    automatically reallocate missmatched results objects as necessary.
+
+    The results objects is connected to its own, independent environment,
+    giving it its own error stack and IO infrastructure.
+
+    Example
+    -------
+    >>> from xtb.interface import Calculator, Param, VERBOSITY_MINIMAL
+    >>> import numpy as np
+    >>> numbers = np.array([8, 1, 1])
+    >>> positions = np.array([
+    ... [ 0.00000000000000, 0.00000000000000,-0.73578586109551],
+    ... [ 1.44183152868459, 0.00000000000000, 0.36789293054775],
+    ... [-1.44183152868459, 0.00000000000000, 0.36789293054775]])
+    ...
+    >>> calc = Calculator(Param.GFN2xTB, numbers, positions)
+    >>> calc.set_verbosity(VERBOSITY_MINIMAL)
+    >>> res = calc.singlepoint()  # energy printed is only the electronic part
+       1     -5.1027888 -0.510279E+01  0.421E+00   14.83       0.0  T
+       2     -5.1040645 -0.127572E-02  0.242E+00   14.55       1.0  T
+       3     -5.1042978 -0.233350E-03  0.381E-01   14.33       1.0  T
+       4     -5.1043581 -0.602769E-04  0.885E-02   14.48       1.0  T
+       5     -5.1043609 -0.280751E-05  0.566E-02   14.43       1.0  T
+       6     -5.1043628 -0.188160E-05  0.131E-03   14.45      44.1  T
+       7     -5.1043628 -0.455326E-09  0.978E-04   14.45      59.1  T
+       8     -5.1043628 -0.572169E-09  0.192E-05   14.45    3009.1  T
+         SCC iter.                  ...        0 min,  0.022 sec
+         gradient                   ...        0 min,  0.000 sec
+    >>> res.get_energy()
+    -5.070451354836705
+    >>> res.get_gradient()
+    [[ 6.24500451e-17 -3.47909735e-17 -5.07156941e-03]
+     [-1.24839222e-03  2.43536791e-17  2.53578470e-03]
+     [ 1.24839222e-03  1.04372944e-17  2.53578470e-03]]
+    >>> res = calc.singlepoint(res)
+       1     -5.1043628 -0.510436E+01  0.898E-08   14.45       0.0  T
+       2     -5.1043628 -0.266454E-14  0.436E-08   14.45  100000.0  T
+       3     -5.1043628  0.177636E-14  0.137E-08   14.45  100000.0  T
+         SCC iter.                  ...        0 min,  0.001 sec
+         gradient                   ...        0 min,  0.000 sec
+    >>> res.get_charges()
+    [-0.56317912  0.28158956  0.28158956]
+
+    Raises
+    ------
+    XTBException
+        in case the requested property is not present in the results object
+    """
 
     _res = _ffi.NULL
 
@@ -237,7 +419,13 @@ class Results(Environment):
         return self._natoms
 
     def get_energy(self):
-        """Query singlepoint results object for energy"""
+        """Query singlepoint results object for energy in Hartree
+
+        Example
+        -------
+        >>> res.get_energy()
+        -5.070451354836705
+        """
         _energy = _ffi.new("double *")
         _lib.xtb_getEnergy(self._env, self._res, _energy)
         if self.check() != 0:
@@ -245,7 +433,15 @@ class Results(Environment):
         return _energy[0]
 
     def get_gradient(self):
-        """Query singlepoint results object for gradient"""
+        """Query singlepoint results object for gradient in Hartree/Bohr
+
+        Example
+        -------
+        >>> res.get_gradient()
+        [[ 6.24500451e-17 -3.47909735e-17 -5.07156941e-03]
+         [-1.24839222e-03  2.43536791e-17  2.53578470e-03]
+         [ 1.24839222e-03  1.04372944e-17  2.53578470e-03]]
+        """
         _gradient = np.zeros((len(self), 3))
         _lib.xtb_getGradient(self._env, self._res, _cast("double*", _gradient))
         if self.check() != 0:
@@ -253,7 +449,15 @@ class Results(Environment):
         return _gradient
 
     def get_virial(self):
-        """Query singlepoint results object for virial"""
+        """Query singlepoint results object for virial given in Hartree
+
+        Example
+        -------
+        >>> res.get_virial()
+        [[ 1.43012837e-02  3.43893209e-17 -1.86809511e-16]
+         [ 0.00000000e+00  0.00000000e+00  0.00000000e+00]
+         [ 1.02348685e-16  1.46994821e-17  3.82414977e-02]]
+        """
         _virial = np.zeros((3, 3))
         _lib.xtb_getVirial(self._env, self._res, _cast("double*", _virial))
         if self.check() != 0:
@@ -261,7 +465,13 @@ class Results(Environment):
         return _virial
 
     def get_dipole(self):
-        """Query singlepoint results object for dipole"""
+        """Query singlepoint results object for dipole in e·Bohr
+
+        Example
+        -------
+        >>> get_dipole()
+        [-4.44089210e-16  1.44419023e-16  8.89047667e-01]
+        """
         _dipole = np.zeros(3)
         _lib.xtb_getDipole(self._env, self._res, _cast("double*", _dipole))
         if self.check() != 0:
@@ -269,7 +479,13 @@ class Results(Environment):
         return _dipole
 
     def get_charges(self):
-        """Query singlepoint results object for partial charges"""
+        """Query singlepoint results object for partial charges in e
+
+        Example
+        -------
+        >>> get_charges()
+        [-0.56317913  0.28158957  0.28158957]
+        """
         _charges = np.zeros(len(self))
         _lib.xtb_getCharges(self._env, self._res, _cast("double*", _charges))
         if self.check() != 0:
@@ -277,7 +493,15 @@ class Results(Environment):
         return _charges
 
     def get_bond_orders(self):
-        """Query singlepoint results object for bond orders"""
+        """Query singlepoint results object for bond orders
+
+        Example
+        -------
+        >>> res.get_bond_orders()
+        [[0.00000000e+00 9.20433501e-01 9.20433501e-01]
+         [9.20433501e-01 0.00000000e+00 2.74039053e-04]
+         [9.20433501e-01 2.74039053e-04 0.00000000e+00]]
+        """
         _bond_orders = np.zeros((len(self), len(self)))
         _lib.xtb_getBondOrders(self._env, self._res, _cast("double*", _bond_orders))
         if self.check() != 0:
@@ -286,7 +510,43 @@ class Results(Environment):
 
 
 class Calculator(Molecule):
-    """Singlepoint calculator"""
+    """Singlepoint calculator
+
+    Examples
+    --------
+    >>> from xtb.interface import Calculator, Param, VERBOSITY_MINIMAL
+    >>> import numpy as np
+    >>> numbers = np.array([8, 1, 1])
+    >>> positions = np.array([
+    ... [ 0.00000000000000, 0.00000000000000,-0.73578586109551],
+    ... [ 1.44183152868459, 0.00000000000000, 0.36789293054775],
+    ... [-1.44183152868459, 0.00000000000000, 0.36789293054775]])
+    ...
+    >>> calc = Calculator(Param.GFN2xTB, numbers, positions)
+    >>> calc.set_verbosity(VERBOSITY_MINIMAL)
+    >>> res = calc.singlepoint()  # energy printed is only the electronic part
+       1     -5.1027888 -0.510279E+01  0.421E+00   14.83       0.0  T
+       2     -5.1040645 -0.127572E-02  0.242E+00   14.55       1.0  T
+       3     -5.1042978 -0.233350E-03  0.381E-01   14.33       1.0  T
+       4     -5.1043581 -0.602769E-04  0.885E-02   14.48       1.0  T
+       5     -5.1043609 -0.280751E-05  0.566E-02   14.43       1.0  T
+       6     -5.1043628 -0.188160E-05  0.131E-03   14.45      44.1  T
+       7     -5.1043628 -0.455326E-09  0.978E-04   14.45      59.1  T
+       8     -5.1043628 -0.572169E-09  0.192E-05   14.45    3009.1  T
+         SCC iter.                  ...        0 min,  0.022 sec
+         gradient                   ...        0 min,  0.000 sec
+    >>> res.get_energy()
+    -5.070451354836705
+    >>> res.get_gradient()
+    [[ 6.24500451e-17 -3.47909735e-17 -5.07156941e-03]
+     [-1.24839222e-03  2.43536791e-17  2.53578470e-03]
+     [ 1.24839222e-03  1.04372944e-17  2.53578470e-03]]
+
+    Raises
+    ------
+    XTBException
+        on errors encountered in API or while performing calculations
+    """
 
     _calc = _ffi.NULL
 
@@ -326,7 +586,7 @@ class Calculator(Molecule):
 
     def singlepoint(self, res: Optional[Results] = None) -> Results:
         """Perform singlepoint calculation,
-        note that the a previous result is consumed by this action"""
+        note that the a previous result is overwritten by this action"""
 
         _res = Results(self) if res is None else res
         _lib.xtb_singlepoint(

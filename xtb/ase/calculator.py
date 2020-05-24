@@ -14,19 +14,39 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
-"""ASE Calculator implementation for the xtb program."""
+"""ASE calculator implementation for the ``xtb`` program.
+
+This module provides the basic single point calculator implementation
+to integrate the ``xtb`` API into existing ASE workflows.
+
+Example
+-------
+>>> from ase.build import molecule
+>>> from xtb.interface import Param
+>>> from xtb.ase.calculator import XTB
+>>> atoms = molecule('H2O')
+>>> atoms.set_calculator(XTB(method=Param.GFN2xTB))
+>>> atoms.get_potential_energy()
+-137.9677758730299
+>>> atoms.get_forces()
+[[ 1.30837706e-16  1.07043680e-15 -7.49514699e-01]
+ [-1.05862195e-16 -1.53501989e-01  3.74757349e-01]
+ [-2.49755108e-17  1.53501989e-01  3.74757349e-01]]
+"""
 
 from typing import List, Optional
 
-from ..interface import Calculator, Param, XTBException
+from ..interface import Calculator, Param, XTBException, VERBOSITY_MUTED
 import ase.calculators.calculator as ase_calc
 from ase.atoms import Atoms
 from ase.units import Hartree, Bohr
-import numpy as np
 
 
 class XTB(ase_calc.Calculator):
-    """Base calculator for xtb related methods."""
+    """ASE calculator for xtb related methods.
+
+    The XTB class can access all methods exposed by the ``xtb`` API.
+    """
 
     implemented_properties = [
         "energy",
@@ -99,6 +119,7 @@ class XTB(ase_calc.Calculator):
                 _cell / Bohr,
                 _periodic,
             )
+            self._xtb.set_verbosity(VERBOSITY_MUTED)
 
         except XTBException:
             raise ase_calc.InputError("Cannot construct calculator for xtb")
