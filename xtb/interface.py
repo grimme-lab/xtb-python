@@ -324,16 +324,19 @@ class Calculator(Molecule):
         if self.check() != 0:
             raise XTBException("Could not load parametrisation data")
 
-    def singlepoint(self, res: Results) -> None:
+    def singlepoint(self, res: Optional[Results] = None) -> Results:
         """Perform singlepoint calculation,
         note that the a previous result is consumed by this action"""
 
+        _res = Results(self) if res is None else res
         _lib.xtb_singlepoint(
-            self._env, self._mol, self._calc, res._res,
+            self._env, self._mol, self._calc, _res._res,
         )
 
         if self.check() != 0:
             raise XTBException("Single point calculation failed")
+
+        return _res
 
 
 def _cast(ctype, array):
