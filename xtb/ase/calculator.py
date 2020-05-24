@@ -18,7 +18,7 @@
 
 from typing import List, Optional
 
-from ..interface import Calculator, Results, Param, XTBException
+from ..interface import Calculator, Param, XTBException
 import ase.calculators.calculator as ase
 from ase.atoms import Atoms
 from ase.units import Hartree, Bohr
@@ -82,15 +82,15 @@ class XTB(ase.Calculator):
                 self.atoms.positions,
             )
         except XTBException as ee:
-            raise(ase.InputError, "Cannot construct calculator for xtb")
+            raise ase.InputError("Cannot construct calculator for xtb")
         except ValueError:
-            raise(ase.InputError, "Invalid geometry input for xtb calculator")
+            raise ase.InputError("Invalid geometry input for xtb calculator")
 
         try:
             self._res = self._xtb.singlepoint(self._res)
         except XTBException as ee:
             self._xtb.show(ee.value)
-            raise(ase.CalculationFailed, "xtb could not evaluate input")
+            raise ase.CalculationFailed("xtb could not evaluate input")
 
         self.results["energy"] = self._res.get_energy() * Hartree
         self.results["forces"] = -self._res.get_gradient() * Hartree/Bohr
