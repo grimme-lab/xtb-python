@@ -19,13 +19,13 @@
 from typing import List, Optional
 
 from ..interface import Calculator, Param, XTBException
-import ase.calculators.calculator as ase
+import ase.calculators.calculator as ase_calc
 from ase.atoms import Atoms
 from ase.units import Hartree, Bohr
 import numpy as np
 
 
-class XTB(ase.Calculator):
+class XTB(ase_calc.Calculator):
     """Base calculator for xtb related methods."""
 
     implemented_properties = [
@@ -48,7 +48,7 @@ class XTB(ase.Calculator):
     ):
         """Construct the xtb base calculator object."""
 
-        ase.Calculator.__init__(self, atoms=atoms, **kwargs)
+        ase_calc.Calculator.__init__(self, atoms=atoms, **kwargs)
 
         # loads the default parameters and updates with actual values
         self.parameters = self.get_default_parameters()
@@ -58,7 +58,7 @@ class XTB(ase.Calculator):
     def set(self, **kwargs):
         """Set new parameters to xtb"""
 
-        changed_parameters = ase.Calculator.set(self, **kwargs)
+        changed_parameters = ase_calc.Calculator.set(self, **kwargs)
 
         # Always reset the xtb calculator for now
         if changed_parameters:
@@ -68,7 +68,7 @@ class XTB(ase.Calculator):
 
     def reset(self):
         """Clear all information from old calculation"""
-        ase.Calculator.reset(self)
+        ase_calc.Calculator.reset(self)
 
         self._res = None
 
@@ -76,13 +76,13 @@ class XTB(ase.Calculator):
         self,
         atoms: Optional[Atoms] = None,
         properties: List[str] = None,
-        system_changes: List[str] = ase.all_changes,
+        system_changes: List[str] = ase_calc.all_changes,
     ):
         """Perform actual calculation with by calling the xtb API"""
 
         if not properties:
             properties = ["energy"]
-        ase.Calculator.calculate(self, atoms, properties, system_changes)
+        ase_calc.Calculator.calculate(self, atoms, properties, system_changes)
 
         try:
             _cell = self.atoms.cell
@@ -101,13 +101,13 @@ class XTB(ase.Calculator):
             )
 
         except XTBException:
-            raise ase.InputError("Cannot construct calculator for xtb")
+            raise ase_calc.InputError("Cannot construct calculator for xtb")
 
         try:
             self._res = self._xtb.singlepoint(self._res)
         except XTBException:
             self._xtb.show("Single point calculation failed")
-            raise ase.CalculationFailed("xtb could not evaluate input")
+            raise ase_calc.CalculationFailed("xtb could not evaluate input")
 
         # These properties are garanteed to exist for all implemented calculators
         self.results["energy"] = self._res.get_energy() * Hartree
