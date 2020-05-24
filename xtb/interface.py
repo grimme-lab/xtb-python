@@ -43,6 +43,66 @@ VERBOSITY_MINIMAL = 1
 VERBOSITY_MUTED = 0
 
 
+def _delete_environment(env):
+    """Delete a xtb calculation environment object"""
+    ptr = _ffi.new("xtb_TEnvironment *")
+    ptr[0], env = env, _ffi.NULL
+    _lib.xtb_delEnvironment(ptr)
+
+
+def _new_environment():
+    """Create new xtb calculation environment object"""
+    return _ffi.gc(_lib.xtb_newEnvironment(), _delete_environment)
+
+
+def _delete_molecule(mol):
+    """Delete molecular structure data"""
+    ptr = _ffi.new("xtb_TMolecule *")
+    ptr[0], mol = mol, _ffi.NULL
+    _lib.xtb_delMolecule(ptr)
+
+
+def _new_molecule(env, natoms, numbers, positions, charge, uhf, lattice, periodic):
+    """Create new molecular structure data"""
+    return _ffi.gc(
+        _lib.xtb_newMolecule(
+            env,
+            natoms,
+            numbers,
+            positions,
+            charge,
+            uhf,
+            lattice,
+            periodic,
+        ),
+        _delete_molecule,
+    )
+
+
+def _delete_results(res):
+    """Delete singlepoint results object"""
+    ptr = _ffi.new("xtb_TResults *")
+    ptr[0], res = res, _ffi.NULL
+    _lib.xtb_delResults(ptr)
+
+
+def _new_results():
+    """Create new singlepoint results object"""
+    return _ffi.gc(_lib.xtb_newResults(), _delete_results)
+
+
+def _delete_calculator(self):
+    """Delete calculator object"""
+    ptr = _ffi.new("xtb_TCalculator *")
+    ptr[0], calc = calc, _ffi.NULL
+    _lib.xtb_delCalculator(ptr)
+
+
+def _new_calculator():
+    """Create new calculator object"""
+    return _ffi.gc(_lib.xtb_newCalculator(), _delete_calculator)
+
+
 class Environment:
     """Calculation environment"""
 
@@ -50,13 +110,7 @@ class Environment:
 
     def __init__(self):
         """Create new xtb calculation environment object"""
-        self._env = _lib.xtb_newEnvironment()
-
-    def __del__(self):
-        """Delete a xtb calculation environment object"""
-        ptr = _ffi.new("xtb_TEnvironment *")
-        ptr[0], self._env = self._env, _ffi.NULL
-        _lib.xtb_delEnvironment(ptr)
+        self._env = _new_environment()
 
     def check(self) -> int:
         """Check current status of calculation environment"""
@@ -124,7 +178,7 @@ class Molecule(Environment):
         else:
             _periodic = None
 
-        self._mol = _lib.xtb_newMolecule(
+        self._mol = _new_molecule(
             self._env,
             _ref("int", self._natoms),
             _cast("int*", _numbers),
@@ -137,13 +191,6 @@ class Molecule(Environment):
 
         if self.check() != 0:
             raise XTBException("Could not initialize molecular structure data")
-
-    def __del__(self):
-        """Delete molecular structure data"""
-        Environment.__del__(self)
-        ptr = _ffi.new("xtb_TMolecule *")
-        ptr[0], self._mol = self._mol, _ffi.NULL
-        _lib.xtb_delMolecule(ptr)
 
     def __len__(self):
         return self._natoms
@@ -183,15 +230,8 @@ class Results(Environment):
     def __init__(self, mol: Molecule):
         """Create new singlepoint results object"""
         Environment.__init__(self)
-        self._res = _lib.xtb_newResults()
+        self._res = _new_results()
         self._natoms = len(mol)
-
-    def __del__(self):
-        """Delete singlepoint results object"""
-        Environment.__del__(self)
-        ptr = _ffi.new("xtb_TResults *")
-        ptr[0], self._res = self._res, _ffi.NULL
-        _lib.xtb_delResults(ptr)
 
     def __len__(self):
         return self._natoms
@@ -271,15 +311,8 @@ class Calculator(Molecule):
         Molecule.__init__(
             self, numbers, positions, charge, uhf, lattice, periodic,
         )
-        self._calc = _lib.xtb_newCalculator()
+        self._calc = _new_calculator()
         self._load(param)
-
-    def __del__(self):
-        """Delete calculator object"""
-        Molecule.__del__(self)
-        ptr = _ffi.new("xtb_TCalculator *")
-        ptr[0], self._calc = self._calc, _ffi.NULL
-        _lib.xtb_delCalculator(ptr)
 
     def _load(self, param: Param):
         """Load parametrisation data into calculator"""
