@@ -46,7 +46,7 @@ VERBOSITY_MUTED = 0
 def _delete_environment(env):
     """Delete a xtb calculation environment object"""
     ptr = _ffi.new("xtb_TEnvironment *")
-    ptr[0], env = env, _ffi.NULL
+    ptr[0] = env
     _lib.xtb_delEnvironment(ptr)
 
 
@@ -58,7 +58,7 @@ def _new_environment():
 def _delete_molecule(mol):
     """Delete molecular structure data"""
     ptr = _ffi.new("xtb_TMolecule *")
-    ptr[0], mol = mol, _ffi.NULL
+    ptr[0] = mol
     _lib.xtb_delMolecule(ptr)
 
 
@@ -82,7 +82,7 @@ def _new_molecule(env, natoms, numbers, positions, charge, uhf, lattice, periodi
 def _delete_results(res):
     """Delete singlepoint results object"""
     ptr = _ffi.new("xtb_TResults *")
-    ptr[0], res = res, _ffi.NULL
+    ptr[0] = res
     _lib.xtb_delResults(ptr)
 
 
@@ -94,7 +94,7 @@ def _new_results():
 def _delete_calculator(calc):
     """Delete calculator object"""
     ptr = _ffi.new("xtb_TCalculator *")
-    ptr[0], calc = calc, _ffi.NULL
+    ptr[0] = calc
     _lib.xtb_delCalculator(ptr)
 
 
