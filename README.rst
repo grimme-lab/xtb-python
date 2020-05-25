@@ -17,7 +17,7 @@ Python API for the extended tight binding program
    :alt: Codecov
    :target: https://codecov.io/gh/grimme-lab/xtb-python
 
-This repository host the Python API for the extended tight binding (``xtb``) program.
+This repository hosts the Python API for the extended tight binding (``xtb``) program.
 
 The idea of this project is to provide the ``xtb`` API for Python *without*
 requiring an additional ``xtb`` installation.
@@ -63,7 +63,7 @@ as usual with
 
    pip install -e .
 
-For more details visit the `documentation <https://xtb-python.readthedocs.io/en/latest/installation.html>`.
+For more details visit the `documentation <https://xtb-python.readthedocs.io/en/latest/installation.html>`_.
 
 
 License
