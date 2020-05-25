@@ -25,12 +25,12 @@ def test_gfn2xtb_energy():
     thr = 1.0e-8
 
     atomic_input = qcel.models.AtomicInput(
-        molecule = qcel.models.Molecule(
-            symbols = [
+        molecule = {
+            "symbols": [
                 "C", "C", "C", "C", "C", "C", "I", "H", "H",
                 "H", "H", "H", "S", "H", "C", "H", "H", "H",
             ],
-            geometry = [
+            "geometry": [
                 -1.42754169820131, -1.50508961850828, -1.93430551124333,
                  1.19860572924150, -1.66299114873979, -2.03189643761298,
                  2.65876001301880,  0.37736955363609, -1.23426391650599,
@@ -50,7 +50,7 @@ def test_gfn2xtb_energy():
                 -5.07177399637298, 10.99164969235585, -2.10739192258756,
                 -6.35955320518616, 14.08073002965080, -1.68204314084441,
             ],
-        ),
+        },
         driver = "energy",
         model = {
             "method": "GFN2-xTB",
@@ -72,12 +72,12 @@ def test_gfn1xtb_gradient():
     thr = 1.0e-8
 
     atomic_input = qcel.models.AtomicInput(
-        molecule = qcel.models.Molecule(
-            symbols = [
+        molecule = {
+            "symbols": [
                 "H", "H", "C", "B", "H", "P", "O", "Cl",
                 "Al", "P", "B", "H", "F", "P", "H", "P",
             ],
-            geometry = [
+            "geometry": [
                  2.79274810283778,  3.82998228828316, -2.79287054959216,
                 -1.43447454186833,  0.43418729987882,  5.53854345129809,
                 -3.26268343665218, -2.50644032426151, -1.56631149351046,
@@ -95,7 +95,7 @@ def test_gfn1xtb_gradient():
                 -4.13181080289514, -2.34226739863660, -3.44356159392859,
                  2.85007173009739, -2.64884892757600,  0.71010806424206,
             ],
-        ),
+        },
         driver = "gradient",
         model = {
             "method": "GFN1-xTB",
@@ -136,12 +136,12 @@ def test_gfn2xtb_gradient():
     thr = 1.0e-8
 
     atomic_input = qcel.models.AtomicInput(
-        molecule = qcel.models.Molecule(
-            symbols = [
+        molecule = {
+            "symbols": [
                 "H", "F", "P", "Al", "H", "H", "Al", "B",
                 "Li", "P", "O", "H", "H", "B", "S", "H",
             ],
-            geometry = [
+            "geometry": [
                 -2.14132037405479, -1.34402701877044, -2.32492500904728,
                  4.46671289205392, -2.04800110524830,  0.44422406067087,
                 -4.92212517643478, -1.73734240529793,  0.96890323821450,
@@ -159,7 +159,7 @@ def test_gfn2xtb_gradient():
                 -1.59355304432499,  3.69176153150419,  2.87878226787916,
                  4.34858700256050,  2.39171478113440, -2.61802993563738,
             ],
-        ),
+        },
         driver = "gradient",
         model = {
             "method": "GFN2-xTB",
@@ -199,11 +199,11 @@ def test_gfn1xtb_hessian():
     """Hessian not available from API, should fail"""
 
     atomic_input = qcel.models.AtomicInput(
-        molecule = qcel.models.Molecule(
-            symbols = [
+        molecule = {
+            "symbols": [
                 "C", "C", "C", "C", "N", "C", "S", "H", "H", "H", "H", "H",
             ],
-            geometry = [
+            "geometry": [
                 -2.56745685564671, -0.02509985979910,  0.00000000000000,
                 -1.39177582455797,  2.27696188880014,  0.00000000000000,
                  1.27784995624894,  2.45107479759386,  0.00000000000000,
@@ -217,7 +217,7 @@ def test_gfn1xtb_hessian():
                  4.66488984573956,  0.17907568006409,  0.00000000000000,
                 -4.60044244782237, -0.17794734637413,  0.00000000000000,
             ],
-        ),
+        },
         driver = "hessian",
         model = {
             "method": "GFN1-xTB",
@@ -235,12 +235,12 @@ def test_gfn2xtb_properties():
     thr = 1.0e-5
 
     atomic_input = qcel.models.AtomicInput(
-        molecule = qcel.models.Molecule(
-            symbols = [
+        molecule = {
+            "symbols": [
                 "Li", "Li", "Li", "Li", "C", "C", "C", "C",
                 "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H",
             ],
-            geometry = [
+            "geometry": [
                  1.58746019997201, -1.58746019997201,  1.58746019997201,
                 -1.58746019997201,  1.58746019997201,  1.58746019997201,
                 -1.58746019997201, -1.58746019997201, -1.58746019997201,
@@ -262,7 +262,7 @@ def test_gfn2xtb_properties():
                 -4.43487372589517,  2.13523102374668, -2.13523102374668,
                 -2.13523102374668,  4.43487372589517, -2.13523102374668,
             ],
-        ),
+        },
         driver = "properties",
         model = {
             "method": "GFN2-xTB",
@@ -281,25 +281,25 @@ def test_gfn2xtb_properties():
     assert approx(atomic_result.return_result['mulliken_charges'], thr) == charges
 
 
-def test_gfn2xtb_nuclearfusion():
+def test_gfn2xtb_error():
     """Pass some cold fusion input to xtb, see how this turns out.
 
     xtb should be perfectly capable of detecting and rejecting this input
     by itself"""
 
     atomic_input = qcel.models.AtomicInput(
-        molecule = qcel.models.Molecule(
-            symbols = [
+        molecule = {
+            "symbols": [
                 "Li", "Li", "Li", "Li",
             ],
-            geometry = [
+            "geometry": [
                 -1.58746019997201,  1.58746019997201,  1.58746019997201,
                 -1.58746019997201,  1.58746019997201,  1.58746019997201,
                 -1.58746019997201, -1.58746019997201, -1.58746019997201,
                  1.58746019997201,  1.58746019997201, -1.58746019997201,
             ],
-            validated = True,  # Force a nuclear fusion input, to make xtb fail
-        ),
+            "validated": True,  # Force a nuclear fusion input, to make xtb fail
+        },
         driver = "properties",
         model = {
             "method": "GFN2-xTB",
