@@ -32,10 +32,18 @@ _methods = {
 def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResult:
     """Perform a calculation based on a QCElemental input"""
 
+    ret_data = input_data.dict()
+
+    provenance = {
+        "creator": "xtb",
+        "version": __version__,
+        "routine": "xtb.qcschema.run_qcschema",
+    }
+
     success = True
     try:
         calc = Calculator(
-            _methods.get(input_data.model.method, "GFN2-xTB"),
+            _methods.get(input_data.model.method, Param.GFN2xTB),
             input_data.molecule.atomic_numbers,
             input_data.molecule.geometry,
             input_data.molecule.molecular_charge,
@@ -58,25 +66,21 @@ def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResul
         elif input_data.driver == "gradient":
             return_result = extras["return_gradient"]
         else:
-            return_result = None
+            return_result = 0.0
             success = False
+
+        ret_data.update(
+            properties=properties,
+            extras=extras,
+            return_result=return_result,
+        )
 
     except XTBException:
         success = False
 
-    provenance = {
-        "creator": "xtb",
-        "version": __version__,
-        "routine": "xtb.qcschema.run_qcschema",
-    }
-
-    ret_data = input_data.dict()
     ret_data.update(
-        success=success,
         provenance=provenance,
-        properties=properties,
-        extras=extras,
-        return_result=return_result,
+        success=success,
     )
 
     return qcel.models.AtomicResult(**ret_data)
