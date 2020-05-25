@@ -16,8 +16,15 @@
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
 """Integration with the QCArchive infrastructure"""
 
+from tempfile import NamedTemporaryFile
 from .. import __version__
-from ..interface import Calculator, Param, XTBException, VERBOSITY_MUTED
+from ..interface import (
+    Calculator,
+    Param,
+    XTBException,
+    get_api_version,
+    VERBOSITY_FULL,
+)
 import qcelemental as qcel
 
 
@@ -36,10 +43,11 @@ def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResul
 
     provenance = {
         "creator": "xtb",
-        "version": __version__,
+        "version": get_api_version(),
         "routine": "xtb.qcschema.run_qcschema",
     }
 
+    fd = NamedTemporaryFile()
     success = True
     try:
         calc = Calculator(
@@ -49,43 +57,61 @@ def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResul
             input_data.molecule.molecular_charge,
             input_data.molecule.molecular_multiplicity - 1,
         )
-        calc.set_verbosity(VERBOSITY_MUTED)
 
+        # We want the full printout from xtb
+        calc.set_verbosity(VERBOSITY_FULL)
+        calc.set_output(fd.name)
+
+        # Perform actual calculation
         res = calc.singlepoint()
+
+        calc.release_output()
 
         properties = {
             "return_energy": res.get_energy(),
             "scf_dipole_moment": res.get_dipole(),
         }
-        extras = {
-            "return_gradient": res.get_gradient(),
-        }
+        extras = dict(
+            xtb={
+                "return_gradient": res.get_gradient(),
+                "mulliken_charges": res.get_charges(),
+                "mayer_indices": res.get_bond_orders(),
+            }
+        )
 
         if input_data.driver == "energy":
             return_result = properties["return_energy"]
         elif input_data.driver == "gradient":
-            return_result = extras["return_gradient"]
+            return_result = extras["xtb"]["return_gradient"]
         elif input_data.driver == "properties":
             return_result = {
-                "return_energy": properties["return_energy"],
-                "return_gradient": extras["return_gradient"],
+                "mulliken_charges": extras["xtb"]["mulliken_charges"],
+                "mayer_indices": extras["xtb"]["mayer_indices"],
             }
         else:
             return_result = 0.0
             success = False
 
         ret_data.update(
-            properties=properties,
-            extras=extras,
-            return_result=return_result,
+            properties=properties, extras=extras, return_result=return_result,
         )
 
-    except XTBException:
+    except XTBException as ee:
         success = False
 
+        ret_data.update(
+            error=qcel.models.ComputeError(
+                error_type="runtime_error", error_message=str(ee),
+            ),
+            return_result=0.0,
+            properties={},
+        )
+
+    output = fd.read().decode()
+    fd.close()
+
     ret_data.update(
-        provenance=provenance,
-        success=success,
+        provenance=provenance, success=success,
     )
 
-    return qcel.models.AtomicResult(**ret_data)
+    return qcel.models.AtomicResult(**ret_data, stdout=output)

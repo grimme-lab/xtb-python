@@ -232,7 +232,7 @@ def test_gfn1xtb_hessian():
 def test_gfn2xtb_properties():
     """Also test properties run type once, should just return everything
     available as a dict"""
-    thr = 1.0e-8
+    thr = 1.0e-5
 
     atomic_input = qcel.models.AtomicInput(
         molecule = qcel.models.Molecule(
@@ -268,8 +268,49 @@ def test_gfn2xtb_properties():
             "method": "GFN2-xTB",
         },
     )
+    charges = np.array([
+         0.45632539,  0.45632539,  0.45632539,  0.45632539, -0.45436293,
+        -0.45436293, -0.45436293, -0.45436293, -0.00065415, -0.00065415,
+        -0.00065415, -0.00065415, -0.00065415, -0.00065415, -0.00065415,
+        -0.00065415, -0.00065415, -0.00065415, -0.00065415, -0.00065415,
+    ])
 
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.return_result['return_energy'], thr) == -15.6117512083347
+    assert approx(atomic_result.return_result['mulliken_charges'], thr) == charges
+
+
+def test_gfn2xtb_nuclearfusion():
+    """Pass some cold fusion input to xtb, see how this turns out.
+
+    xtb should be perfectly capable of detecting and refusing this input
+    by itself"""
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule = qcel.models.Molecule(
+            symbols = [
+                "Li", "Li", "Li", "Li",
+            ],
+            geometry = [
+                -1.58746019997201,  1.58746019997201,  1.58746019997201,
+                -1.58746019997201,  1.58746019997201,  1.58746019997201,
+                -1.58746019997201, -1.58746019997201, -1.58746019997201,
+                 1.58746019997201,  1.58746019997201, -1.58746019997201,
+            ],
+            validated = True,  # Force a nuclear fusion input, to make xtb fail
+        ),
+        driver = "properties",
+        model = {
+            "method": "GFN2-xTB",
+        },
+    )
+    error = qcel.models.ComputeError(
+        error_type='runtime_error',
+        error_message='Setup of molecular structure failed: \n-1- xtb_api_newMolecule: Could not generate molecular structure',
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert not atomic_result.success
+    assert atomic_result.error == error
