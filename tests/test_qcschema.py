@@ -21,7 +21,7 @@ import qcelemental as qcel
 import numpy as np
 
 def test_gfn2xtb_energy():
-    """Use QCSchema to calculate the energy a halogen bond compoind"""
+    """Use QCSchema to calculate the energy of a halogen bond compound"""
     thr = 1.0e-8
 
     atomic_input = qcel.models.AtomicInput(
@@ -68,7 +68,7 @@ def test_gfn2xtb_energy():
 
 
 def test_gfn1xtb_gradient():
-    """Use QCSchema to perform a calculation on a mindless molecule"""
+    """Use QCSchema to perform a GFN1-xTB calculation on a mindless molecule"""
     thr = 1.0e-8
 
     atomic_input = qcel.models.AtomicInput(
@@ -284,7 +284,7 @@ def test_gfn2xtb_properties():
 def test_gfn2xtb_nuclearfusion():
     """Pass some cold fusion input to xtb, see how this turns out.
 
-    xtb should be perfectly capable of detecting and refusing this input
+    xtb should be perfectly capable of detecting and rejecting this input
     by itself"""
 
     atomic_input = qcel.models.AtomicInput(

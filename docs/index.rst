@@ -12,3 +12,4 @@ The project is hosted at `GitHub <https://github.com/grimme-lab/xtb-python>`_.
    installation
    general-api
    ase-calculator
+   qcarchive

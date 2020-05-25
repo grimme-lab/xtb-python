@@ -14,7 +14,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
-"""Integration with the QCArchive infrastructure"""
+"""Integration with the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
+
+This module provides a way to translate QCSchema or QCElemental Atomic Input
+into a format understandable by the ``xtb`` API which in turn provides the
+calculation results in a QCSchema compatible format.
+"""
 
 from tempfile import NamedTemporaryFile
 from .. import __version__
@@ -37,7 +42,31 @@ _methods = {
 
 
 def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResult:
-    """Perform a calculation based on a QCElemental input"""
+    """Perform a calculation based on an atomic input model.
+
+    Example
+    -------
+    >>> from xtb.qcschema.harness import run_qcschema
+    >>> import qcelemental as qcel
+    >>> atomic_input = qcel.models.AtomicInput(
+    ...     molecule = qcel.models.Molecule(
+    ...         symbols = ["O", "H", "H"],
+    ...         geometry = [
+    ...             0.00000000000000,  0.00000000000000, -0.73578586109551,
+    ...             1.44183152868459,  0.00000000000000,  0.36789293054775,
+    ...            -1.44183152868459,  0.00000000000000,  0.36789293054775
+    ...         ],
+    ...     ),
+    ...     driver = "energy",
+    ...     model = {
+    ...         "method": "GFN2-xTB",
+    ...     },
+    ... )
+    ...
+    >>> atomic_result = run_qcschema(atomic_input)
+    >>> atomic_result.return_result
+    -5.070451354848316
+    """
 
     ret_data = input_data.dict()
 
@@ -85,12 +114,20 @@ def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResul
             return_result = extras["xtb"]["return_gradient"]
         elif input_data.driver == "properties":
             return_result = {
+                "dipole": properties["scf_dipole_moment"],
                 "mulliken_charges": extras["xtb"]["mulliken_charges"],
                 "mayer_indices": extras["xtb"]["mayer_indices"],
             }
         else:
             return_result = 0.0
             success = False
+
+            ret_data.update(
+                error=qcel.models.ComputeError(
+                    error_type="input_error",
+                    error_message="Calculation succeeded but invalid driver request provided",
+                ),
+            )
 
         ret_data.update(
             properties=properties, extras=extras, return_result=return_result,
