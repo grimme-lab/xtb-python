@@ -26,7 +26,26 @@ except ImportError:
     raise ImportError("xtb C extension unimportable, cannot use C-API")
 
 
-class XTBException(Exception): ...
+def get_api_version() -> str:
+    """Return the current API version from xtb, for easy usage in C
+    the API version is provided as
+
+    10000 * major + 100 * minor + patch
+
+    For Python we want something that looks like a semantic version again.
+    """
+    api_version = _lib.xtb_getAPIVersion()
+    return "{}.{}.{}".format(
+        int(api_version / 10000),
+        int(api_version % 10000 / 100),
+        int(api_version % 100),
+    )
+
+
+class XTBException(Exception):
+    """Thrown if an error in the C-API is encountered"""
+
+    pass
 
 
 class Param(Enum):
@@ -118,14 +137,7 @@ def _new_molecule(env, natoms, numbers, positions, charge, uhf, lattice, periodi
     """Create new molecular structure data"""
     return _ffi.gc(
         _lib.xtb_newMolecule(
-            env,
-            natoms,
-            numbers,
-            positions,
-            charge,
-            uhf,
-            lattice,
-            periodic,
+            env, natoms, numbers, positions, charge, uhf, lattice, periodic,
         ),
         _delete_molecule,
     )
@@ -194,6 +206,20 @@ class Environment:
         """
         return _lib.xtb_checkEnvironment(self._env)
 
+    def get_error(self, message: Optional[str] = None) -> str:
+        """Check for error messages
+
+        Example
+        -------
+        >>> if env.check() != 0:
+        ...     raise XTBException(env.get_error())
+        """
+        _message = _ffi.new("char[]", 512)
+        _lib.xtb_getError(self._env, _message, _ref("int", 512))
+        if message is not None:
+            return "{}: {}".format(message, _ffi.string(_message).decode())
+        return _ffi.string(_message).decode()
+
     def show(self, message: str) -> None:
         """Show and empty error stack"""
         _message = _ffi.new("char[]", message.encode())
@@ -233,13 +259,9 @@ class Molecule(Environment):
     >>> mol = Molecule(numbers, positions)
     >>> len(mol)
     3
-    >>> mol.update(np.zeros(len(mol), 3))  # will fail nuclear fusion check
-    xtb.interface.XTBException: Could not update molecular structure data
-    >>> mol.show("API message log")  # API error log must be cleared!
-    ########################################################################
-    [ERROR] API message log
+    >>> mol.update(np.zeros((len(mol), 3)))  # will fail nuclear fusion check
+    xtb.interface.XTBException: Update of molecular structure failed:
     -1- xtb_api_updateMolecule: Could not update molecular structure
-    ########################################################################
     >>> mol.update(positions)
 
     Raises
@@ -303,14 +325,14 @@ class Molecule(Environment):
         )
 
         if self.check() != 0:
-            raise XTBException("Could not initialize molecular structure data")
+            raise XTBException(self.get_error("Setup of molecular structure failed"))
 
     def __len__(self):
         return self._natoms
 
     def update(
         self, positions: np.ndarray, lattice: Optional[np.ndarray] = None,
-    ):
+    ) -> None:
         """Update coordinates and lattice parameters, both provided in
         atomic units (Bohr).
         The lattice update is optional also for periodic structures.
@@ -348,7 +370,7 @@ class Molecule(Environment):
         )
 
         if self.check() != 0:
-            raise XTBException("Could not update molecular structure data")
+            raise XTBException(self.get_error("Update of molecular structure failed"))
 
 
 class Results(Environment):
@@ -418,7 +440,7 @@ class Results(Environment):
     def __len__(self):
         return self._natoms
 
-    def get_energy(self):
+    def get_energy(self) -> float:
         """Query singlepoint results object for energy in Hartree
 
         Example
@@ -429,10 +451,10 @@ class Results(Environment):
         _energy = _ffi.new("double *")
         _lib.xtb_getEnergy(self._env, self._res, _energy)
         if self.check() != 0:
-            raise XTBException("Energy is not available")
+            raise XTBException(self.get_error())
         return _energy[0]
 
-    def get_gradient(self):
+    def get_gradient(self) -> np.ndarray:
         """Query singlepoint results object for gradient in Hartree/Bohr
 
         Example
@@ -445,10 +467,10 @@ class Results(Environment):
         _gradient = np.zeros((len(self), 3))
         _lib.xtb_getGradient(self._env, self._res, _cast("double*", _gradient))
         if self.check() != 0:
-            raise XTBException("Gradient is not available")
+            raise XTBException(self.get_error())
         return _gradient
 
-    def get_virial(self):
+    def get_virial(self) -> np.ndarray:
         """Query singlepoint results object for virial given in Hartree
 
         Example
@@ -461,7 +483,7 @@ class Results(Environment):
         _virial = np.zeros((3, 3))
         _lib.xtb_getVirial(self._env, self._res, _cast("double*", _virial))
         if self.check() != 0:
-            raise XTBException("Virial is not available")
+            raise XTBException(self.get_error())
         return _virial
 
     def get_dipole(self):
@@ -475,10 +497,10 @@ class Results(Environment):
         _dipole = np.zeros(3)
         _lib.xtb_getDipole(self._env, self._res, _cast("double*", _dipole))
         if self.check() != 0:
-            raise XTBException("Dipole is not available")
+            raise XTBException(self.get_error())
         return _dipole
 
-    def get_charges(self):
+    def get_charges(self) -> np.ndarray:
         """Query singlepoint results object for partial charges in e
 
         Example
@@ -489,10 +511,10 @@ class Results(Environment):
         _charges = np.zeros(len(self))
         _lib.xtb_getCharges(self._env, self._res, _cast("double*", _charges))
         if self.check() != 0:
-            raise XTBException("Charges are not available")
+            raise XTBException(self.get_error())
         return _charges
 
-    def get_bond_orders(self):
+    def get_bond_orders(self) -> np.ndarray:
         """Query singlepoint results object for bond orders
 
         Example
@@ -505,7 +527,7 @@ class Results(Environment):
         _bond_orders = np.zeros((len(self), len(self)))
         _lib.xtb_getBondOrders(self._env, self._res, _cast("double*", _bond_orders))
         if self.check() != 0:
-            raise XTBException("Bond orders are not available")
+            raise XTBException(self.get_error())
         return _bond_orders
 
 
@@ -582,7 +604,7 @@ class Calculator(Molecule):
         )
 
         if self.check() != 0:
-            raise XTBException("Could not load parametrisation data")
+            raise XTBException(self.get_error("Could not load parametrisation data"))
 
     def singlepoint(self, res: Optional[Results] = None) -> Results:
         """Perform singlepoint calculation,
@@ -594,7 +616,7 @@ class Calculator(Molecule):
         )
 
         if self.check() != 0:
-            raise XTBException("Single point calculation failed")
+            raise XTBException(self.get_error("Single point calculation failed"))
 
         return _res
 

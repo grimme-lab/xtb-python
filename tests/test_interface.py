@@ -21,10 +21,21 @@ from xtb.interface import (
     Calculator,
     Results,
     Param,
+    get_api_version,
     VERBOSITY_MINIMAL,
 )
+from xtb import __version__
 from pytest import approx, raises
 import numpy as np
+
+
+def test_api_version():
+    """Ensure that the API version is compatible.
+
+    We currently enforce an exact match between the version of this package
+    and the API version, but this might change in the future.
+    """
+    assert get_api_version() == __version__
 
 
 def test_molecule():
@@ -65,7 +76,7 @@ def test_molecule():
     message = "Expecting nuclear fusion warning"
 
     # Constructor should raise an error for nuclear fusion input
-    with raises(XTBException, match="Could not initialize"):
+    with raises(XTBException, match="Setup of molecular structure failed"):
         mol = Molecule(numbers, np.zeros((24, 3)))
 
     # The Python class should protect from garbage input like this
@@ -88,7 +99,7 @@ def test_molecule():
         mol.update(positions, np.random.rand(7))
 
     # Try to update a structure with nuclear fusion coordinates
-    with raises(XTBException, match="Could not update"):
+    with raises(XTBException, match="Update of molecular structure failed"):
         mol.update(np.zeros((24, 3)))
 
     # Redirect API output to file
@@ -256,12 +267,18 @@ def test_gfn1_xtb_0d():
     res = Results(calc)
 
     # check if we cannot retrieve properties from the unallocated result
+    with raises(XTBException, match="Energy is not available"):
+        res.get_energy()
+    with raises(XTBException, match="Gradient is not available"):
+        res.get_gradient()
     with raises(XTBException, match="Virial is not available"):
         res.get_virial()
-    res.show("Release error log")
+    with raises(XTBException, match="Partial charges are not available"):
+        res.get_charges()
+    with raises(XTBException, match="Dipole moment is not available"):
+        res.get_dipole()
     with raises(XTBException, match="Bond orders are not available"):
         res.get_bond_orders()
-    res.show("Release error log")
 
     # Start calculation by restarting with result
     res = calc.singlepoint(res)
