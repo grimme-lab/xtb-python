@@ -63,7 +63,7 @@ def test_gfn2xtb_energy():
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.properties.return_energy, thr) == -26.60185037124828
+    assert approx(atomic_result.return_result, thr) == -26.60185037124828
     assert approx(atomic_result.properties.scf_dipole_moment, thr) == dipole_moment
 
 
@@ -227,3 +227,49 @@ def test_gfn1xtb_hessian():
     atomic_result = run_qcschema(atomic_input)
 
     assert not atomic_result.success
+
+
+def test_gfn2xtb_properties():
+    """Also test properties run type once, should just return everything
+    available as a dict"""
+    thr = 1.0e-8
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule = qcel.models.Molecule(
+            symbols = [
+                "Li", "Li", "Li", "Li", "C", "C", "C", "C",
+                "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H",
+            ],
+            geometry = [
+                 1.58746019997201, -1.58746019997201,  1.58746019997201,
+                -1.58746019997201,  1.58746019997201,  1.58746019997201,
+                -1.58746019997201, -1.58746019997201, -1.58746019997201,
+                 1.58746019997201,  1.58746019997201, -1.58746019997201,
+                -2.38500089414639, -2.38500089414639,  2.38500089414639,
+                 2.38500089414639, -2.38500089414639, -2.38500089414639,
+                -2.38500089414639,  2.38500089414639, -2.38500089414639,
+                 2.38500089414639,  2.38500089414639,  2.38500089414639,
+                -4.43487372589517, -2.13523102374668,  2.13523102374668,
+                -2.13523102374668, -4.43487372589517,  2.13523102374668,
+                -2.13523102374668, -2.13523102374668,  4.43487372589517,
+                 2.13523102374668,  4.43487372589517,  2.13523102374668,
+                 2.13523102374668,  2.13523102374668,  4.43487372589517,
+                 4.43487372589517,  2.13523102374668,  2.13523102374668,
+                 2.13523102374668, -2.13523102374668, -4.43487372589517,
+                 4.43487372589517, -2.13523102374668, -2.13523102374668,
+                 2.13523102374668, -4.43487372589517, -2.13523102374668,
+                -2.13523102374668,  2.13523102374668, -4.43487372589517,
+                -4.43487372589517,  2.13523102374668, -2.13523102374668,
+                -2.13523102374668,  4.43487372589517, -2.13523102374668,
+            ],
+        ),
+        driver = "properties",
+        model = {
+            "method": "GFN2-xTB",
+        },
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert atomic_result.success
+    assert approx(atomic_result.return_result['return_energy'], thr) == -15.6117512083347

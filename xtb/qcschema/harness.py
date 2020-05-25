@@ -65,6 +65,11 @@ def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResul
             return_result = properties["return_energy"]
         elif input_data.driver == "gradient":
             return_result = extras["return_gradient"]
+        elif input_data.driver == "properties":
+            return_result = {
+                "return_energy": properties["return_energy"],
+                "return_gradient": extras["return_gradient"],
+            }
         else:
             return_result = 0.0
             success = False
