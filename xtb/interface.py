@@ -26,6 +26,22 @@ except ImportError:
     raise ImportError("xtb C extension unimportable, cannot use C-API")
 
 
+def get_api_version() -> int:
+    """Return the current API version from xtb, for easy usage in C
+    the API version is provided as
+
+    10000 * major + 100 * minor + patch
+
+    For Python we want something that looks like a semantic version again.
+    """
+    api_version = _lib.xtb_getAPIVersion()
+    return "{}.{}.{}".format(
+        int(api_version / 10000),
+        int(api_version % 10000 / 100),
+        int(api_version % 100),
+    )
+
+
 class XTBException(Exception):
     """Thrown if an error in the C-API is encountered"""
 

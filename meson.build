@@ -18,7 +18,6 @@
 project(
   'xtb-python',
   'c',
-  version: '0.1',
   license: 'LGPL3',
 )
 

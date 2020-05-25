@@ -22,8 +22,6 @@ This repository host the Python API for the extended tight binding (``xtb``) pro
 The idea of this project is to provide the ``xtb`` API for Python *without*
 requiring an additional ``xtb`` installation.
 
-*This project is still work in progress!*
-
 
 Installation
 ------------
@@ -64,6 +62,8 @@ as usual with
 .. code::
 
    pip install -e .
+
+For more details visit the `documentation <https://xtb-python.readthedocs.io/en/latest/installation.html>`.
 
 
 License

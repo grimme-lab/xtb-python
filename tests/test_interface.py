@@ -21,10 +21,21 @@ from xtb.interface import (
     Calculator,
     Results,
     Param,
+    get_api_version,
     VERBOSITY_MINIMAL,
 )
+from xtb import __version__
 from pytest import approx, raises
 import numpy as np
+
+
+def test_api_version():
+    """Ensure that the API version is compatible.
+
+    We currently enforce an exact match between the version of this package
+    and the API version, but this might change in the future.
+    """
+    assert get_api_version() == __version__
 
 
 def test_molecule():
