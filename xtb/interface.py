@@ -26,7 +26,10 @@ except ImportError:
     raise ImportError("xtb C extension unimportable, cannot use C-API")
 
 
-class XTBException(Exception): ...
+class XTBException(Exception):
+    """Thrown if an error in the C-API is encountered"""
+
+    pass
 
 
 class Param(Enum):
@@ -118,14 +121,7 @@ def _new_molecule(env, natoms, numbers, positions, charge, uhf, lattice, periodi
     """Create new molecular structure data"""
     return _ffi.gc(
         _lib.xtb_newMolecule(
-            env,
-            natoms,
-            numbers,
-            positions,
-            charge,
-            uhf,
-            lattice,
-            periodic,
+            env, natoms, numbers, positions, charge, uhf, lattice, periodic,
         ),
         _delete_molecule,
     )
@@ -194,7 +190,7 @@ class Environment:
         """
         return _lib.xtb_checkEnvironment(self._env)
 
-    def get_error(self) -> str:
+    def get_error(self, message: Optional[str] = None) -> str:
         """Check for error messages
 
         Example
@@ -204,6 +200,8 @@ class Environment:
         """
         _message = _ffi.new("char[]", 512)
         _lib.xtb_getError(self._env, _message, _ref("int", 512))
+        if message is not None:
+            return "{}: {}".format(message, _ffi.string(_message).decode())
         return _ffi.string(_message).decode()
 
     def show(self, message: str) -> None:
@@ -245,13 +243,9 @@ class Molecule(Environment):
     >>> mol = Molecule(numbers, positions)
     >>> len(mol)
     3
-    >>> mol.update(np.zeros(len(mol), 3))  # will fail nuclear fusion check
-    xtb.interface.XTBException: Could not update molecular structure data
-    >>> mol.show("API message log")  # API error log must be cleared!
-    ########################################################################
-    [ERROR] API message log
+    >>> mol.update(np.zeros((len(mol), 3)))  # will fail nuclear fusion check
+    xtb.interface.XTBException: Update of molecular structure failed:
     -1- xtb_api_updateMolecule: Could not update molecular structure
-    ########################################################################
     >>> mol.update(positions)
 
     Raises
@@ -315,14 +309,14 @@ class Molecule(Environment):
         )
 
         if self.check() != 0:
-            raise XTBException(self.get_error())
+            raise XTBException(self.get_error("Setup of molecular structure failed"))
 
     def __len__(self):
         return self._natoms
 
     def update(
         self, positions: np.ndarray, lattice: Optional[np.ndarray] = None,
-    ):
+    ) -> None:
         """Update coordinates and lattice parameters, both provided in
         atomic units (Bohr).
         The lattice update is optional also for periodic structures.
@@ -360,7 +354,7 @@ class Molecule(Environment):
         )
 
         if self.check() != 0:
-            raise XTBException(self.get_error())
+            raise XTBException(self.get_error("Update of molecular structure failed"))
 
 
 class Results(Environment):
@@ -430,7 +424,7 @@ class Results(Environment):
     def __len__(self):
         return self._natoms
 
-    def get_energy(self):
+    def get_energy(self) -> float:
         """Query singlepoint results object for energy in Hartree
 
         Example
@@ -444,7 +438,7 @@ class Results(Environment):
             raise XTBException(self.get_error())
         return _energy[0]
 
-    def get_gradient(self):
+    def get_gradient(self) -> np.ndarray:
         """Query singlepoint results object for gradient in Hartree/Bohr
 
         Example
@@ -460,7 +454,7 @@ class Results(Environment):
             raise XTBException(self.get_error())
         return _gradient
 
-    def get_virial(self):
+    def get_virial(self) -> np.ndarray:
         """Query singlepoint results object for virial given in Hartree
 
         Example
@@ -490,7 +484,7 @@ class Results(Environment):
             raise XTBException(self.get_error())
         return _dipole
 
-    def get_charges(self):
+    def get_charges(self) -> np.ndarray:
         """Query singlepoint results object for partial charges in e
 
         Example
@@ -504,7 +498,7 @@ class Results(Environment):
             raise XTBException(self.get_error())
         return _charges
 
-    def get_bond_orders(self):
+    def get_bond_orders(self) -> np.ndarray:
         """Query singlepoint results object for bond orders
 
         Example
@@ -594,7 +588,7 @@ class Calculator(Molecule):
         )
 
         if self.check() != 0:
-            raise XTBException(self.get_error())
+            raise XTBException(self.get_error("Could not load parametrisation data"))
 
     def singlepoint(self, res: Optional[Results] = None) -> Results:
         """Perform singlepoint calculation,
@@ -606,7 +600,7 @@ class Calculator(Molecule):
         )
 
         if self.check() != 0:
-            raise XTBException(self.get_error())
+            raise XTBException(self.get_error("Single point calculation failed"))
 
         return _res
 
