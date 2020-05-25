@@ -194,6 +194,18 @@ class Environment:
         """
         return _lib.xtb_checkEnvironment(self._env)
 
+    def get_error(self) -> str:
+        """Check for error messages
+
+        Example
+        -------
+        >>> if env.check() != 0:
+        ...     raise XTBException(env.get_error())
+        """
+        _message = _ffi.new("char[]", 512)
+        _lib.xtb_getError(self._env, _message, _ref("int", 512))
+        return _ffi.string(_message).decode()
+
     def show(self, message: str) -> None:
         """Show and empty error stack"""
         _message = _ffi.new("char[]", message.encode())
@@ -303,7 +315,7 @@ class Molecule(Environment):
         )
 
         if self.check() != 0:
-            raise XTBException("Could not initialize molecular structure data")
+            raise XTBException(self.get_error())
 
     def __len__(self):
         return self._natoms
@@ -348,7 +360,7 @@ class Molecule(Environment):
         )
 
         if self.check() != 0:
-            raise XTBException("Could not update molecular structure data")
+            raise XTBException(self.get_error())
 
 
 class Results(Environment):
@@ -429,7 +441,7 @@ class Results(Environment):
         _energy = _ffi.new("double *")
         _lib.xtb_getEnergy(self._env, self._res, _energy)
         if self.check() != 0:
-            raise XTBException("Energy is not available")
+            raise XTBException(self.get_error())
         return _energy[0]
 
     def get_gradient(self):
@@ -445,7 +457,7 @@ class Results(Environment):
         _gradient = np.zeros((len(self), 3))
         _lib.xtb_getGradient(self._env, self._res, _cast("double*", _gradient))
         if self.check() != 0:
-            raise XTBException("Gradient is not available")
+            raise XTBException(self.get_error())
         return _gradient
 
     def get_virial(self):
@@ -461,7 +473,7 @@ class Results(Environment):
         _virial = np.zeros((3, 3))
         _lib.xtb_getVirial(self._env, self._res, _cast("double*", _virial))
         if self.check() != 0:
-            raise XTBException("Virial is not available")
+            raise XTBException(self.get_error())
         return _virial
 
     def get_dipole(self):
@@ -475,7 +487,7 @@ class Results(Environment):
         _dipole = np.zeros(3)
         _lib.xtb_getDipole(self._env, self._res, _cast("double*", _dipole))
         if self.check() != 0:
-            raise XTBException("Dipole is not available")
+            raise XTBException(self.get_error())
         return _dipole
 
     def get_charges(self):
@@ -489,7 +501,7 @@ class Results(Environment):
         _charges = np.zeros(len(self))
         _lib.xtb_getCharges(self._env, self._res, _cast("double*", _charges))
         if self.check() != 0:
-            raise XTBException("Charges are not available")
+            raise XTBException(self.get_error())
         return _charges
 
     def get_bond_orders(self):
@@ -505,7 +517,7 @@ class Results(Environment):
         _bond_orders = np.zeros((len(self), len(self)))
         _lib.xtb_getBondOrders(self._env, self._res, _cast("double*", _bond_orders))
         if self.check() != 0:
-            raise XTBException("Bond orders are not available")
+            raise XTBException(self.get_error())
         return _bond_orders
 
 
@@ -582,7 +594,7 @@ class Calculator(Molecule):
         )
 
         if self.check() != 0:
-            raise XTBException("Could not load parametrisation data")
+            raise XTBException(self.get_error())
 
     def singlepoint(self, res: Optional[Results] = None) -> Results:
         """Perform singlepoint calculation,
@@ -594,7 +606,7 @@ class Calculator(Molecule):
         )
 
         if self.check() != 0:
-            raise XTBException("Single point calculation failed")
+            raise XTBException(self.get_error())
 
         return _res
 
