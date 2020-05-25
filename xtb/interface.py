@@ -26,7 +26,7 @@ except ImportError:
     raise ImportError("xtb C extension unimportable, cannot use C-API")
 
 
-def get_api_version() -> int:
+def get_api_version() -> str:
     """Return the current API version from xtb, for easy usage in C
     the API version is provided as
 
