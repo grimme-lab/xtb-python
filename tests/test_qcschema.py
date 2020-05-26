@@ -71,8 +71,8 @@ def test_gfn1xtb_gradient():
     """Use QCSchema to perform a GFN1-xTB calculation on a mindless molecule"""
     thr = 1.0e-8
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule = {
+    atomic_input = {
+        "molecule": {
             "symbols": [
                 "H", "H", "C", "B", "H", "P", "O", "Cl",
                 "Al", "P", "B", "H", "F", "P", "H", "P",
@@ -96,11 +96,11 @@ def test_gfn1xtb_gradient():
                  2.85007173009739, -2.64884892757600,  0.71010806424206,
             ],
         },
-        driver = "gradient",
-        model = {
+        "driver": "gradient",
+        "model": {
             "method": "GFN1-xTB",
         },
-    )
+    }
     dipole_moment = np.array(
         [-1.46493585, -2.03036834,  2.08330405]
     )
@@ -123,7 +123,7 @@ def test_gfn1xtb_gradient():
         [ 0.007101471144788836,  0.004214350959247828, -0.001021909232339549],
     ])
 
-    atomic_result = run_qcschema(atomic_input)
+    atomic_result = run_qcschema(qcel.models.AtomicInput(**atomic_input))
 
     assert atomic_result.success
     assert approx(atomic_result.properties.return_energy, thr) == -33.63768565903155
@@ -135,8 +135,8 @@ def test_gfn2xtb_gradient():
     """Use QCSchema to perform a GFN2-xTB calculation on a mindless molecule"""
     thr = 1.0e-8
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule = {
+    atomic_input = {
+        "molecule": {
             "symbols": [
                 "H", "F", "P", "Al", "H", "H", "Al", "B",
                 "Li", "P", "O", "H", "H", "B", "S", "H",
@@ -160,11 +160,11 @@ def test_gfn2xtb_gradient():
                  4.34858700256050,  2.39171478113440, -2.61802993563738,
             ],
         },
-        driver = "gradient",
-        model = {
+        "driver": "gradient",
+        "model": {
             "method": "GFN2-xTB",
         },
-    )
+    }
     dipole_moment = np.array(
         [ 0.1965142200947483, -0.8278681912495578, -1.9355888893816835]
     )

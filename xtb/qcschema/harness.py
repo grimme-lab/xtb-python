@@ -21,6 +21,7 @@ into a format understandable by the ``xtb`` API which in turn provides the
 calculation results in a QCSchema compatible format.
 """
 
+from typing import Union
 from tempfile import NamedTemporaryFile
 from .. import __version__
 from ..interface import (
@@ -41,7 +42,9 @@ _methods = {
 }
 
 
-def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResult:
+def run_qcschema(
+    input_data: Union[dict, qcel.models.AtomicInput]
+) -> qcel.models.AtomicResult:
     """Perform a calculation based on an atomic input model.
 
     Example
@@ -68,7 +71,11 @@ def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResul
     -5.070451354848316
     """
 
-    ret_data = input_data.dict()
+    if not isinstance(input_data, qcel.models.AtomicInput):
+        atomic_input = qcel.models.AtomicInput(**input_data)
+    else:
+        atomic_input = input_data
+    ret_data = atomic_input.dict()
 
     provenance = {
         "creator": "xtb",
@@ -80,11 +87,11 @@ def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResul
     success = True
     try:
         calc = Calculator(
-            _methods.get(input_data.model.method, Param.GFN2xTB),
-            input_data.molecule.atomic_numbers,
-            input_data.molecule.geometry,
-            input_data.molecule.molecular_charge,
-            input_data.molecule.molecular_multiplicity - 1,
+            _methods.get(atomic_input.model.method, Param.GFN2xTB),
+            atomic_input.molecule.atomic_numbers,
+            atomic_input.molecule.geometry,
+            atomic_input.molecule.molecular_charge,
+            atomic_input.molecule.molecular_multiplicity - 1,
         )
 
         # We want the full printout from xtb
@@ -108,11 +115,11 @@ def run_qcschema(input_data: qcel.models.AtomicInput) -> qcel.models.AtomicResul
             }
         )
 
-        if input_data.driver == "energy":
+        if atomic_input.driver == "energy":
             return_result = properties["return_energy"]
-        elif input_data.driver == "gradient":
+        elif atomic_input.driver == "gradient":
             return_result = extras["xtb"]["return_gradient"]
-        elif input_data.driver == "properties":
+        elif atomic_input.driver == "properties":
             return_result = {
                 "dipole": properties["scf_dipole_moment"],
                 "mulliken_charges": extras["xtb"]["mulliken_charges"],
