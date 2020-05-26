@@ -1,3 +1,4 @@
 cffi
 numpy
 ase
+qcelemental

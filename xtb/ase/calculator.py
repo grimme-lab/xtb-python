@@ -14,7 +14,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
-"""ASE calculator implementation for the ``xtb`` program.
+"""`ASE calculator <https://wiki.fysik.dtu.dk/ase/>`_ implementation
+for the ``xtb`` program.
 
 This module provides the basic single point calculator implementation
 to integrate the ``xtb`` API into existing ASE workflows.
