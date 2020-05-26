@@ -21,23 +21,14 @@ from enum import Enum, auto
 import numpy as np
 
 
-from .libxtb import ffi as _ffi, lib as _lib
-
-
-def get_api_version() -> str:
-    """Return the current API version from xtb, for easy usage in C
-    the API version is provided as
-
-    10000 * major + 100 * minor + patch
-
-    For Python we want something that looks like a semantic version again.
-    """
-    api_version = _lib.xtb_getAPIVersion()
-    return "{}.{}.{}".format(
-        int(api_version / 10000),
-        int(api_version % 10000 / 100),
-        int(api_version % 100),
-    )
+from .libxtb import (
+    ffi as _ffi,
+    lib as _lib,
+    new_environment,
+    new_molecule,
+    new_calculator,
+    new_results,
+)
 
 
 class XTBException(Exception):
@@ -107,64 +98,6 @@ class Param(Enum):
     """
 
 
-VERBOSITY_FULL = 2
-VERBOSITY_MINIMAL = 1
-VERBOSITY_MUTED = 0
-
-
-def _delete_environment(env):
-    """Delete a xtb calculation environment object"""
-    ptr = _ffi.new("xtb_TEnvironment *")
-    ptr[0] = env
-    _lib.xtb_delEnvironment(ptr)
-
-
-def _new_environment():
-    """Create new xtb calculation environment object"""
-    return _ffi.gc(_lib.xtb_newEnvironment(), _delete_environment)
-
-
-def _delete_molecule(mol):
-    """Delete molecular structure data"""
-    ptr = _ffi.new("xtb_TMolecule *")
-    ptr[0] = mol
-    _lib.xtb_delMolecule(ptr)
-
-
-def _new_molecule(env, natoms, numbers, positions, charge, uhf, lattice, periodic):
-    """Create new molecular structure data"""
-    return _ffi.gc(
-        _lib.xtb_newMolecule(
-            env, natoms, numbers, positions, charge, uhf, lattice, periodic,
-        ),
-        _delete_molecule,
-    )
-
-
-def _delete_results(res):
-    """Delete singlepoint results object"""
-    ptr = _ffi.new("xtb_TResults *")
-    ptr[0] = res
-    _lib.xtb_delResults(ptr)
-
-
-def _new_results():
-    """Create new singlepoint results object"""
-    return _ffi.gc(_lib.xtb_newResults(), _delete_results)
-
-
-def _delete_calculator(calc):
-    """Delete calculator object"""
-    ptr = _ffi.new("xtb_TCalculator *")
-    ptr[0] = calc
-    _lib.xtb_delCalculator(ptr)
-
-
-def _new_calculator():
-    """Create new calculator object"""
-    return _ffi.gc(_lib.xtb_newCalculator(), _delete_calculator)
-
-
 class Environment:
     """Calculation environment
 
@@ -178,7 +111,8 @@ class Environment:
 
     Example
     -------
-    >>> from xtb.interface import Environment, VERBOSITY_FULL
+    >>> from xtb.libxtb import VERBOSITY_FULL
+    >>> from xtb.interface import Environment
     >>> env = Environment()
     >>> env.set_output("error.log")
     >>> env.set_verbosity(VERBOSITY_FULL)
@@ -192,7 +126,7 @@ class Environment:
 
     def __init__(self):
         """Create new xtb calculation environment object"""
-        self._env = _new_environment()
+        self._env = new_environment()
 
     def check(self) -> int:
         """Check current status of calculation environment
@@ -311,7 +245,7 @@ class Molecule(Environment):
         else:
             _periodic = None
 
-        self._mol = _new_molecule(
+        self._mol = new_molecule(
             self._env,
             _ref("int", self._natoms),
             _cast("int*", _numbers),
@@ -385,7 +319,8 @@ class Results(Environment):
 
     Example
     -------
-    >>> from xtb.interface import Calculator, Param, VERBOSITY_MINIMAL
+    >>> from xtb.libxtb import VERBOSITY_MINIMAL
+    >>> from xtb.interface import Calculator, Param
     >>> import numpy as np
     >>> numbers = np.array([8, 1, 1])
     >>> positions = np.array([
@@ -432,7 +367,7 @@ class Results(Environment):
     def __init__(self, mol: Molecule):
         """Create new singlepoint results object"""
         Environment.__init__(self)
-        self._res = _new_results()
+        self._res = new_results()
         self._natoms = len(mol)
 
     def __len__(self):
@@ -534,7 +469,8 @@ class Calculator(Molecule):
 
     Examples
     --------
-    >>> from xtb.interface import Calculator, Param, VERBOSITY_MINIMAL
+    >>> from xtb.libxtb import VERBOSITY_MINIMAL
+    >>> from xtb.interface import Calculator, Param
     >>> import numpy as np
     >>> numbers = np.array([8, 1, 1])
     >>> positions = np.array([
@@ -591,7 +527,7 @@ class Calculator(Molecule):
         Molecule.__init__(
             self, numbers, positions, charge, uhf, lattice, periodic,
         )
-        self._calc = _new_calculator()
+        self._calc = new_calculator()
         self._load(param)
 
     def _load(self, param: Param):
