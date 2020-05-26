@@ -20,10 +20,8 @@ from typing import List, Optional
 from enum import Enum, auto
 import numpy as np
 
-try:
-    from ._libxtb import ffi as _ffi, lib as _lib
-except ImportError:
-    raise ImportError("xtb C extension unimportable, cannot use C-API")
+
+from .libxtb import ffi as _ffi, lib as _lib
 
 
 def get_api_version() -> str:
