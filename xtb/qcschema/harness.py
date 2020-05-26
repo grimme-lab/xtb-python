@@ -23,13 +23,11 @@ calculation results in a QCSchema compatible format.
 
 from typing import Union
 from tempfile import NamedTemporaryFile
-from .. import __version__
+from ..libxtb import VERBOSITY_FULL, get_api_version
 from ..interface import (
     Calculator,
     Param,
     XTBException,
-    get_api_version,
-    VERBOSITY_FULL,
 )
 import qcelemental as qcel
 

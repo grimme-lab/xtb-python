@@ -37,7 +37,8 @@ Example
 
 from typing import List, Optional
 
-from ..interface import Calculator, Param, XTBException, VERBOSITY_MUTED
+from ..libxtb import VERBOSITY_MUTED
+from ..interface import Calculator, Param, XTBException
 import ase.calculators.calculator as ase_calc
 from ase.atoms import Atoms
 from ase.units import Hartree, Bohr
