@@ -519,8 +519,6 @@ class Results(Environment):
     def get_orbital_eigenvalues(self) -> np.ndarray:
         """Query singlepoint results object for orbital energies in Hartree"""
         _nao = self.get_number_of_orbitals()
-        if _nao <= 0:
-            raise XTBException("Results does not contain wavefunction data")
         _eigenvalues = np.zeros(_nao)
         _lib.xtb_getOrbitalEigenvalues(
             self._env, self._res, _cast("double*", _eigenvalues)
@@ -532,8 +530,6 @@ class Results(Environment):
     def get_orbital_occupations(self) -> np.ndarray:
         """Query singlepoint results object for occupation numbers"""
         _nao = self.get_number_of_orbitals()
-        if _nao <= 0:
-            raise XTBException("Results does not contain wavefunction data")
         _occupations = np.zeros(_nao)
         _lib.xtb_getOrbitalOccupations(
             self._env, self._res, _cast("double*", _occupations)
@@ -545,8 +541,6 @@ class Results(Environment):
     def get_orbital_coefficients(self) -> np.ndarray:
         """Query singlepoint results object for orbital coefficients"""
         _nao = self.get_number_of_orbitals()
-        if _nao <= 0:
-            raise XTBException("Results does not contain wavefunction data")
         _coefficients = np.zeros((_nao, _nao), order="F")
         _lib.xtb_getOrbitalCoefficients(
             self._env, self._res, _cast("double*", _coefficients)

@@ -272,11 +272,11 @@ def test_gfn1_xtb_0d():
 
     assert res.get_number_of_orbitals() == 0
 
-    with raises(XTBException, match="Results does not contain wavefunction data"):
+    with raises(XTBException, match="Orbital eigenvalues are not available"):
         res.get_orbital_eigenvalues()
-    with raises(XTBException, match="Results does not contain wavefunction data"):
+    with raises(XTBException, match="Occupation numbers are not available"):
         res.get_orbital_occupations()
-    with raises(XTBException, match="Results does not contain wavefunction data"):
+    with raises(XTBException, match="Orbital coefficients are not available"):
         res.get_orbital_coefficients()
 
     # Start calculation by restarting with result
