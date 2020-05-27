@@ -67,15 +67,15 @@ def test_molecule():
 
     # Constructor should raise an error for nuclear fusion input
     with raises(XTBException, match="Setup of molecular structure failed"):
-        mol = Molecule(numbers, np.zeros((24, 3)))
+        Molecule(numbers, np.zeros((24, 3)))
 
     # The Python class should protect from garbage input like this
     with raises(ValueError, match="Dimension missmatch"):
-        mol = Molecule(np.array([1, 1, 1]), positions)
+        Molecule(np.array([1, 1, 1]), positions)
 
     # Also check for sane coordinate input
     with raises(ValueError, match="Expected tripels"):
-        mol = Molecule(numbers, np.random.rand(7))
+        Molecule(numbers, np.random.rand(7))
 
     # Construct real molecule
     mol = Molecule(numbers, positions)
