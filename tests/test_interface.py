@@ -22,6 +22,7 @@ from xtb.interface import (
     Calculator,
     Results,
     Param,
+    Solvent,
 )
 from pytest import approx, raises
 import numpy as np
@@ -471,7 +472,7 @@ def test_gfn1xtb_solvation():
 
     calc = Calculator(Param.GFN1xTB, numbers, positions)
 
-    calc.set_solvent('methanol')
+    calc.set_solvent(Solvent.methanol)
 
     res = calc.singlepoint()
 
@@ -539,7 +540,7 @@ def test_gfn2xtb_solvation():
 
     assert approx(res.get_energy(), thr) == -25.0841508410945
 
-    calc.set_solvent('ch2cl2')
+    calc.set_solvent(Solvent.ch2cl2)
 
     res = calc.singlepoint(res)
 

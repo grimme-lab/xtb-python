@@ -99,6 +99,43 @@ class Param(Enum):
     """
 
 
+class Solvent(Enum):
+    """Possible solvents for the GBSA model"""
+
+    acetone = auto()
+    acetonitrile = auto()
+    benzene = auto()
+    ch2cl2 = auto()
+    chcl3 = auto()
+    cs2 = auto()
+    dmf = auto()
+    dmso = auto()
+    ether = auto()
+    h2o = auto()
+    methanol = auto()
+    nhexan = auto()
+    thf = auto()
+    toluene = auto()
+
+
+_solvents = {
+    Solvent.acetone: "acetone",
+    Solvent.acetonitrile: "acetonitrile",
+    Solvent.benzene: "benzene",
+    Solvent.ch2cl2: "ch2cl2",
+    Solvent.chcl3: "chcl3",
+    Solvent.cs2: "cs2",
+    Solvent.dmf: "dmf",
+    Solvent.dmso: "dmso",
+    Solvent.ether: "ether",
+    Solvent.h2o: "h2o",
+    Solvent.methanol: "methanol",
+    Solvent.nhexan: "nhexan",
+    Solvent.thf: "thf",
+    Solvent.toluene: "toluene",
+}
+
+
 class Environment:
     """Calculation environment
 
@@ -510,7 +547,7 @@ class Results(Environment):
         _nao = self.get_number_of_orbitals()
         if _nao <= 0:
             raise XTBException("Results does not contain wavefunction data")
-        _coefficients = np.zeros((_nao, _nao), order='F')
+        _coefficients = np.zeros((_nao, _nao), order="F")
         _lib.xtb_getOrbitalCoefficients(
             self._env, self._res, _cast("double*", _coefficients)
         )
@@ -595,10 +632,10 @@ class Calculator(Molecule):
         if self.check() != 0:
             raise XTBException(self.get_error("Could not load parametrisation data"))
 
-    def set_solvent(self, solvent: Optional[str] = None) -> None:
+    def set_solvent(self, solvent: Optional[Solvent] = None) -> None:
         """Add/Remove a solvation model to/from calculator"""
         if solvent is not None:
-            _solvent = _ffi.new("char[]", solvent.lower().encode())
+            _solvent = _ffi.new("char[]", _solvents.get(solvent, "none").encode())
             _lib.xtb_setSolvent(
                 self._env, self._calc, _solvent, _ffi.NULL, _ffi.NULL, _ffi.NULL
             )
