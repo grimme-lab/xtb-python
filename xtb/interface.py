@@ -113,7 +113,7 @@ class Solvent(Enum):
     ether = auto()
     h2o = auto()
     methanol = auto()
-    nhexan = auto()
+    nhexane = auto()
     thf = auto()
     toluene = auto()
 
@@ -130,7 +130,7 @@ _solvents = {
     Solvent.ether: "ether",
     Solvent.h2o: "h2o",
     Solvent.methanol: "methanol",
-    Solvent.nhexan: "nhexan",
+    Solvent.nhexane: "nhexane",
     Solvent.thf: "thf",
     Solvent.toluene: "toluene",
 }
@@ -637,6 +637,30 @@ class Calculator(Molecule):
             _lib.xtb_releaseSolvent(self._env, self._calc)
         if self.check() != 0:
             raise XTBException(self.get_error("Failed to set solvent model"))
+
+    def set_accuracy(self, accuracy: float) -> None:
+        """Set numerical accuracy for calculation"""
+
+        _lib.xtb_setAccuracy(self._env, self._calc, accuracy)
+
+        if self.check() != 0:
+            raise XTBException(self.get_error())
+
+    def set_max_iterations(self, maxiter: int) -> None:
+        """Set maximum number of iterations for self-consistent charge methods"""
+
+        _lib.xtb_setMaxIter(self._env, self._calc, maxiter)
+
+        if self.check() != 0:
+            raise XTBException(self.get_error())
+
+    def set_electronic_temperature(self, etemp: int) -> None:
+        """Set electronic temperature for tight binding Hamiltonians"""
+
+        _lib.xtb_setElectronicTemp(self._env, self._calc, etemp)
+
+        if self.check() != 0:
+            raise XTBException(self.get_error())
 
     def singlepoint(self, res: Optional[Results] = None, copy: bool = False) -> Results:
         """Perform singlepoint calculation,

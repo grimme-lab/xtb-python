@@ -29,15 +29,8 @@ from ..interface import (
     Param,
     XTBException,
 )
+from ..utils import get_method, get_solvent
 import qcelemental as qcel
-
-
-_methods = {
-    "GFN2-xTB": Param.GFN2xTB,
-    "GFN1-xTB": Param.GFN1xTB,
-    "GFN0-xTB": Param.GFN0xTB,
-    "GFN-FF": Param.GFNFF,
-}
 
 
 def run_qcschema(
@@ -85,7 +78,7 @@ def run_qcschema(
     success = True
     try:
         calc = Calculator(
-            _methods.get(atomic_input.model.method, Param.GFN2xTB),
+            get_method(atomic_input.model.method),
             atomic_input.molecule.atomic_numbers,
             atomic_input.molecule.geometry,
             atomic_input.molecule.molecular_charge,

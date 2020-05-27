@@ -178,6 +178,10 @@ def test_gfn2_xtb_0d():
     calc.set_verbosity(VERBOSITY_MINIMAL)
     assert calc.check() == 0
 
+    calc.set_accuracy(1.0)
+    calc.set_max_iterations(50)
+    calc.set_electronic_temperature(300.0)
+
     res = calc.singlepoint()
 
     assert approx(res.get_energy(), thr) == -42.14746312757416
