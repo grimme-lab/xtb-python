@@ -517,7 +517,14 @@ class Results(Environment):
         return _nao[0]
 
     def get_orbital_eigenvalues(self) -> np.ndarray:
-        """Query singlepoint results object for orbital energies in Hartree"""
+        """Query singlepoint results object for orbital energies in Hartree
+
+        Example
+        -------
+        >>> res.get_orbital_eigenvalues()
+        array([-0.68087967, -0.56667693, -0.51373083, -0.44710101,  0.08394016,
+                0.24142397])
+        """
         _nao = self.get_number_of_orbitals()
         _eigenvalues = np.zeros(_nao)
         _lib.xtb_getOrbitalEigenvalues(
@@ -528,7 +535,13 @@ class Results(Environment):
         return _eigenvalues
 
     def get_orbital_occupations(self) -> np.ndarray:
-        """Query singlepoint results object for occupation numbers"""
+        """Query singlepoint results object for occupation numbers
+
+        Example
+        -------
+        >>> res.get_orbital_occupations()
+        array([2., 2., 2., 2., 0., 0.])
+        """
         _nao = self.get_number_of_orbitals()
         _occupations = np.zeros(_nao)
         _lib.xtb_getOrbitalOccupations(
@@ -539,7 +552,24 @@ class Results(Environment):
         return _occupations
 
     def get_orbital_coefficients(self) -> np.ndarray:
-        """Query singlepoint results object for orbital coefficients"""
+        """Query singlepoint results object for orbital coefficients
+
+        Example
+        -------
+        >>> res.get_orbital_coefficients()
+        array([[-7.94626768e-01,  6.38378239e-16,  4.52990407e-01,
+                -6.38746369e-16, -8.35495085e-01, -4.44089210e-16],
+               [ 2.77555756e-17, -6.97332245e-01,  7.49400542e-16,
+                 1.88136491e-17,  7.21644966e-16, -9.60006511e-01],
+               [ 2.17336312e-16, -1.08051945e-16, -1.11598977e-15,
+                -1.00000000e+00,  5.74153329e-17,  3.30330107e-17],
+               [-8.67578876e-02, -9.71445147e-16, -8.05763104e-01,
+                 7.71702239e-16, -7.18690020e-01, -4.71844785e-16],
+               [-1.84540457e-01, -3.54572323e-01, -2.39090946e-01,
+                 2.87533552e-16,  7.68757806e-01,  9.02845514e-01],
+               [-1.84540457e-01,  3.54572323e-01, -2.39090946e-01,
+                 2.01021058e-16,  7.68757806e-01, -9.02845514e-01]])
+        """
         _nao = self.get_number_of_orbitals()
         _coefficients = np.zeros((_nao, _nao), order="F")
         _lib.xtb_getOrbitalCoefficients(
@@ -627,7 +657,16 @@ class Calculator(Molecule):
             raise XTBException(self.get_error("Could not load parametrisation data"))
 
     def set_solvent(self, solvent: Optional[Solvent] = None) -> None:
-        """Add/Remove a solvation model to/from calculator"""
+        """Add/Remove a solvation model to/from calculator
+
+        Example
+        -------
+        >>> from xtb.utils import get_solvent, Solvent
+        ...
+        >>> calc.set_solvent(Solvent.h2o)  # Set solvent to water with enumerator
+        >>> calc.set_solvent()  # Release solvent again
+        >>> calc.set_solvent(get_solvent("CHCl3"))  # Find correct enumerator
+        """
         if solvent is not None:
             _solvent = _ffi.new("char[]", _solvents.get(solvent, "none").encode())
             _lib.xtb_setSolvent(
@@ -639,23 +678,53 @@ class Calculator(Molecule):
             raise XTBException(self.get_error("Failed to set solvent model"))
 
     def set_accuracy(self, accuracy: float) -> None:
-        """Set numerical accuracy for calculation"""
+        """Set numerical accuracy for calculation, ranges from 1000 to 0.0001,
+        values outside this range will be cutted with warning placed in the
+        error log, which can be retrieved by get_error() but will not trigger
+        check().
+
+        Example
+        -------
+        >>> calc.set_accuracy(1.0)
+        """
 
         _lib.xtb_setAccuracy(self._env, self._calc, accuracy)
 
     def set_max_iterations(self, maxiter: int) -> None:
-        """Set maximum number of iterations for self-consistent charge methods"""
+        """Set maximum number of iterations for self-consistent charge methods,
+        values smaller than one will be silently ignored by the API.
+        Failing to converge in a given number of cycles is not necessarily
+        reported as an error by the API.
+
+        Example
+        -------
+        >>> calc.set_max_iterations(100)
+        """
 
         _lib.xtb_setMaxIter(self._env, self._calc, maxiter)
 
     def set_electronic_temperature(self, etemp: int) -> None:
-        """Set electronic temperature for tight binding Hamiltonians"""
+        """Set electronic temperature in K for tight binding Hamiltonians,
+        values smaller or equal to zero will be silently ignored by the API.
+
+        Example
+        -------
+        >>> calc.set_electronic_temperature(300.0)
+        """
 
         _lib.xtb_setElectronicTemp(self._env, self._calc, etemp)
 
     def singlepoint(self, res: Optional[Results] = None, copy: bool = False) -> Results:
         """Perform singlepoint calculation,
-        note that the a previous result is overwritten by this action"""
+        note that the a previous result is overwritten by default.
+
+        Example
+        -------
+        >>> res = calc.singlepoint()
+        >>> res = calc.singlepoint(res)
+        >>> calc.singlepoint(res)  # equivalent to the above
+        >>> new = calc.singlepoint(res, copy=True)
+        """
 
         if res is not None:
             if copy:

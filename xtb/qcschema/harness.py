@@ -19,6 +19,17 @@
 This module provides a way to translate QCSchema or QCElemental Atomic Input
 into a format understandable by the ``xtb`` API which in turn provides the
 calculation results in a QCSchema compatible format.
+
+The ``xtb`` model supports any method accepted by ``xtb.utils.get_method``.
+
+Supported keywords are
+
+======================== =========== ============================================
+ accuracy                 1.0         Numerical accuracy of the calculation
+ electronic_temperature   300.0       Electronic temperatur for TB methods
+ max_iterations           250         Iterations for self-consistent evaluation
+ solvent                  "none"      GBSA implicit solvent model
+======================== =========== ============================================
 """
 
 from typing import Union
@@ -50,6 +61,10 @@ def run_qcschema(
     ...     driver = "energy",
     ...     model = {
     ...         "method": "GFN2-xTB",
+    ...     },
+    ...     keywords = {
+    ...         "accuracy": 1.0,
+    ...         "max_iterations": 50,
     ...     },
     ... )
     ...

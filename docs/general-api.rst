@@ -34,3 +34,5 @@ Available Calculation Methods
 
 .. autoclass:: Param
    :members:
+
+.. automethod:: xtb.utils.get_method

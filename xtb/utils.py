@@ -33,7 +33,19 @@ _methods = {
 
 
 def get_method(method: str) -> Optional[Param]:
-    """Return the correct parameter enumerator for a string input"""
+    """Return the correct parameter enumerator for a string input.
+
+    Example
+    -------
+    >>> get_method('GFN2-xTB')
+    <Param.GFN2xTB: 1>
+    >>> get_method('gfn2xtb')
+    <Param.GFN2xTB: 1>
+    >>> get_method('GFN-xTB') is None
+    True
+    >>> get_method('GFN1-xTB') is None
+    False
+    """
 
     return _methods.get(method.lower())
 
@@ -60,6 +72,6 @@ _solvents = {
 
 
 def get_solvent(solvent: str) -> Optional[Solvent]:
-    """Return the correct solvent enumerator for a string input"""
+    """Return the correct solvent enumerator for a string input."""
 
     return _solvents.get(solvent.lower())
