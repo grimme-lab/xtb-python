@@ -307,7 +307,7 @@ def test_gfn2xtb_error():
     )
     error = qcel.models.ComputeError(
         error_type='runtime_error',
-        error_message='Setup of molecular structure failed: \n-1- xtb_api_newMolecule: Could not generate molecular structure',
+        error_message='Setup of molecular structure failed:\n-1- xtb_api_newMolecule: Could not generate molecular structure',
     )
 
     atomic_result = run_qcschema(atomic_input)

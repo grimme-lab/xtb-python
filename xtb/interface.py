@@ -149,7 +149,7 @@ class Environment:
         _message = _ffi.new("char[]", 512)
         _lib.xtb_getError(self._env, _message, _ref("int", 512))
         if message is not None:
-            return "{}: {}".format(message, _ffi.string(_message).decode())
+            return "{}:\n{}".format(message, _ffi.string(_message).decode())
         return _ffi.string(_message).decode()
 
     def show(self, message: str) -> None:
