@@ -24,11 +24,7 @@ calculation results in a QCSchema compatible format.
 from typing import Union
 from tempfile import NamedTemporaryFile
 from ..libxtb import VERBOSITY_FULL, get_api_version
-from ..interface import (
-    Calculator,
-    Param,
-    XTBException,
-)
+from ..interface import Calculator, XTBException
 from ..utils import get_method, get_solvent
 import qcelemental as qcel
 
