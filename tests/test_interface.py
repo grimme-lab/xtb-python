@@ -269,6 +269,15 @@ def test_gfn1_xtb_0d():
     with raises(XTBException, match="Bond orders are not available"):
         res.get_bond_orders()
 
+    assert res.get_number_of_orbitals() == 0
+
+    with raises(XTBException, match="Results does not contain wavefunction data"):
+        res.get_orbital_eigenvalues()
+    with raises(XTBException, match="Results does not contain wavefunction data"):
+        res.get_orbital_occupations()
+    with raises(XTBException, match="Results does not contain wavefunction data"):
+        res.get_orbital_coefficients()
+
     # Start calculation by restarting with result
     res = calc.singlepoint(res)
 

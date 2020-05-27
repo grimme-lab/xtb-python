@@ -605,7 +605,7 @@ class Calculator(Molecule):
         else:
             _lib.xtb_releaseSolvent(self._env, self._calc)
         if self.check() != 0:
-            raise XTBException(self.get_error("Failed to release solvent model"))
+            raise XTBException(self.get_error("Failed to set solvent model"))
 
     def singlepoint(self, res: Optional[Results] = None, copy: bool = False) -> Results:
         """Perform singlepoint calculation,
