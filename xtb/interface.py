@@ -16,7 +16,7 @@
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
 """Wrapper around the C-API of the xtb shared library."""
 
-from typing import List, Optional
+from typing import List, Optional, Union
 from enum import Enum, auto
 import numpy as np
 
@@ -28,6 +28,7 @@ from .libxtb import (
     new_molecule,
     new_calculator,
     new_results,
+    copy_results,
 )
 
 
@@ -364,11 +365,14 @@ class Results(Environment):
 
     _res = _ffi.NULL
 
-    def __init__(self, mol: Molecule):
+    def __init__(self, res: Union[Molecule, "Results"]):
         """Create new singlepoint results object"""
         Environment.__init__(self)
-        self._res = new_results()
-        self._natoms = len(mol)
+        if isinstance(res, Results):
+            self._res = copy_results(res._res)
+        else:
+            self._res = new_results()
+        self._natoms = len(res)
 
     def __len__(self):
         return self._natoms
@@ -419,7 +423,7 @@ class Results(Environment):
             raise XTBException(self.get_error())
         return _virial
 
-    def get_dipole(self):
+    def get_dipole(self) -> np.ndarray:
         """Query singlepoint results object for dipole in e·Bohr
 
         Example
@@ -462,6 +466,57 @@ class Results(Environment):
         if self.check() != 0:
             raise XTBException(self.get_error())
         return _bond_orders
+
+    def get_number_of_orbitals(self) -> int:
+        """Query singlepoint results object for the number of basis functions
+
+        Example
+        -------
+        >>> res.get_number_of_orbitals()
+        6
+        """
+        _nao = _ffi.new("int *")
+        _lib.xtb_getNao(self._env, self._res, _nao)
+        return _nao[0]
+
+    def get_orbital_eigenvalues(self) -> np.ndarray:
+        """Query singlepoint results object for orbital energies in Hartree"""
+        _nao = self.get_number_of_orbitals()
+        if _nao <= 0:
+            raise XTBException("Results does not contain wavefunction data")
+        _eigenvalues = np.zeros(_nao)
+        _lib.xtb_getOrbitalEigenvalues(
+            self._env, self._res, _cast("double*", _eigenvalues)
+        )
+        if self.check() != 0:
+            raise XTBException(self.get_error())
+        return _eigenvalues
+
+    def get_orbital_occupations(self) -> np.ndarray:
+        """Query singlepoint results object for occupation numbers"""
+        _nao = self.get_number_of_orbitals()
+        if _nao <= 0:
+            raise XTBException("Results does not contain wavefunction data")
+        _occupations = np.zeros(_nao)
+        _lib.xtb_getOrbitalOccupations(
+            self._env, self._res, _cast("double*", _occupations)
+        )
+        if self.check() != 0:
+            raise XTBException(self.get_error())
+        return _occupations
+
+    def get_orbital_coefficients(self) -> np.ndarray:
+        """Query singlepoint results object for orbital coefficients"""
+        _nao = self.get_number_of_orbitals()
+        if _nao <= 0:
+            raise XTBException("Results does not contain wavefunction data")
+        _coefficients = np.zeros((_nao, _nao), order='F')
+        _lib.xtb_getOrbitalCoefficients(
+            self._env, self._res, _cast("double*", _coefficients)
+        )
+        if self.check() != 0:
+            raise XTBException(self.get_error())
+        return _coefficients
 
 
 class Calculator(Molecule):
@@ -540,11 +595,30 @@ class Calculator(Molecule):
         if self.check() != 0:
             raise XTBException(self.get_error("Could not load parametrisation data"))
 
-    def singlepoint(self, res: Optional[Results] = None) -> Results:
+    def set_solvent(self, solvent: Optional[str] = None) -> None:
+        """Add/Remove a solvation model to/from calculator"""
+        if solvent is not None:
+            _solvent = _ffi.new("char[]", solvent.lower().encode())
+            _lib.xtb_setSolvent(
+                self._env, self._calc, _solvent, _ffi.NULL, _ffi.NULL, _ffi.NULL
+            )
+        else:
+            _lib.xtb_releaseSolvent(self._env, self._calc)
+        if self.check() != 0:
+            raise XTBException(self.get_error("Failed to release solvent model"))
+
+    def singlepoint(self, res: Optional[Results] = None, copy: bool = False) -> Results:
         """Perform singlepoint calculation,
         note that the a previous result is overwritten by this action"""
 
-        _res = Results(self) if res is None else res
+        if res is not None:
+            if copy:
+                _res = Results(res)
+            else:
+                _res = res
+        else:
+            _res = Results(self)
+
         _lib.xtb_singlepoint(
             self._env, self._mol, self._calc, _res._res,
         )

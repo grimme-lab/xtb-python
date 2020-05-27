@@ -96,6 +96,11 @@ def new_results():
     return ffi.gc(lib.xtb_newResults(), _delete_results)
 
 
+def copy_results(res):
+    """Create new singlepoint results object from existing results"""
+    return ffi.gc(lib.xtb_copyResults(res), _delete_results)
+
+
 def _delete_calculator(calc):
     """Delete calculator object"""
     ptr = ffi.new("xtb_TCalculator *")
