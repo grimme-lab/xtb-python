@@ -74,16 +74,47 @@ def run_qcschema(
         "routine": "xtb.qcschema.run_qcschema",
     }
 
+    _method = get_method(atomic_input.model.method)
+    if _method is None:
+        ret_data.update(
+            success=False,
+            return_result=0.0,
+            provenance=provenance,
+            properties={},
+            error=qcel.models.ComputeError(
+                error_type="input_error",
+                error_message="Invalid method {} provided in model".format(
+                    atomic_input.model.method
+                ),
+            ),
+        )
+
+        return qcel.models.AtomicResult(**ret_data)
+
     fd = NamedTemporaryFile()
     success = True
     try:
         calc = Calculator(
-            get_method(atomic_input.model.method),
+            _method,
             atomic_input.molecule.atomic_numbers,
             atomic_input.molecule.geometry,
             atomic_input.molecule.molecular_charge,
             atomic_input.molecule.molecular_multiplicity - 1,
         )
+
+        if "solvent" in atomic_input.keywords:
+            calc.set_solvent(get_solvent(atomic_input.keywords["solvent"]))
+
+        if "accuracy" in atomic_input.keywords:
+            calc.set_accuracy(atomic_input.keywords["accuracy"])
+
+        if "max_iterations" in atomic_input.keywords:
+            calc.set_max_iterations(atomic_input.keywords["max_iterations"])
+
+        if "electronic_temperature" in atomic_input.keywords:
+            calc.set_electronic_temperature(
+                atomic_input.keywords["electronic_temperature"]
+            )
 
         # We want the full printout from xtb
         calc.set_verbosity(VERBOSITY_FULL)

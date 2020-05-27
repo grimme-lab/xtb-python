@@ -16,6 +16,7 @@
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
 """Helper functions to deal with xtb API objects"""
 
+from typing import Optional
 from .interface import Solvent, Param
 
 
@@ -31,7 +32,7 @@ _methods = {
 }
 
 
-def get_method(method: str) -> Param:
+def get_method(method: str) -> Optional[Param]:
     """Return the correct parameter enumerator for a string input"""
 
     return _methods.get(method.lower())
@@ -58,7 +59,7 @@ _solvents = {
 }
 
 
-def get_solvent(solvent: str) -> Solvent:
+def get_solvent(solvent: str) -> Optional[Solvent]:
     """Return the correct solvent enumerator for a string input"""
 
     return _solvents.get(solvent.lower())

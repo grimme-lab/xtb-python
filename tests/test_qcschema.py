@@ -55,6 +55,12 @@ def test_gfn2xtb_energy():
         model = {
             "method": "GFN2-xTB",
         },
+        keywords = {
+            "accuracy": 1.0,
+            "electronic_temperature": 300.0,
+            "max_iterations": 50,
+            "solvent": "none",
+        }
     )
     dipole_moment = np.array(
         [0.3345064021648074, -1.0700925215553294, -1.2299195418603437]
@@ -308,6 +314,45 @@ def test_gfn2xtb_error():
     error = qcel.models.ComputeError(
         error_type='runtime_error',
         error_message='Setup of molecular structure failed:\n-1- xtb_api_newMolecule: Could not generate molecular structure',
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert not atomic_result.success
+    assert atomic_result.error == error
+
+
+def test_unknown_method():
+    """Select an unknown method in the atomic input"""
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule = {
+            "symbols": [
+                "C", "C", "C", "C", "N", "C", "S", "H", "H", "H", "H", "H",
+            ],
+            "geometry": [
+                -2.56745685564671, -0.02509985979910,  0.00000000000000,
+                -1.39177582455797,  2.27696188880014,  0.00000000000000,
+                 1.27784995624894,  2.45107479759386,  0.00000000000000,
+                 2.62801937615793,  0.25927727028120,  0.00000000000000,
+                 1.41097033661123, -1.99890996077412,  0.00000000000000,
+                -1.17186102298849, -2.34220576284180,  0.00000000000000,
+                -2.39505990368378, -5.22635838332362,  0.00000000000000,
+                 2.41961980455457, -3.62158019253045,  0.00000000000000,
+                -2.51744374846065,  3.98181713686746,  0.00000000000000,
+                 2.24269048384775,  4.24389473203647,  0.00000000000000,
+                 4.66488984573956,  0.17907568006409,  0.00000000000000,
+                -4.60044244782237, -0.17794734637413,  0.00000000000000,
+            ],
+        },
+        driver = "energy",
+        model = {
+            "method": "GFN-xTB",  # GFN-xTB should be GFN1-xTB
+        },
+    )
+    error = qcel.models.ComputeError(
+        error_type='input_error',
+        error_message='Invalid method GFN-xTB provided in model',
     )
 
     atomic_result = run_qcschema(atomic_input)

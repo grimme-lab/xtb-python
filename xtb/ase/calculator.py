@@ -58,8 +58,12 @@ class XTB(ase_calc.Calculator):
         "stress",
     ]
 
-    default_options = {
+    default_parameters = {
         "method": Param.GFN2xTB,
+        "accuracy": 1.0,
+        "max_iterations": 250,
+        "electronic_temperature": 300.0,
+        "solvent": None,
     }
 
     _res = None
@@ -122,6 +126,10 @@ class XTB(ase_calc.Calculator):
                 _periodic,
             )
             self._xtb.set_verbosity(VERBOSITY_MUTED)
+            self._xtb.set_accuracy(self.parameters.accuracy)
+            self._xtb.set_electronic_temperature(self.parameters.electronic_temperature)
+            self._xtb.set_max_iterations(self.parameters.max_iterations)
+            self._xtb.set_solvent(self.parameters.solvent)
 
         except XTBException:
             raise ase_calc.InputError("Cannot construct calculator for xtb")
