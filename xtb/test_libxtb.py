@@ -16,14 +16,10 @@
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from xtb import __version__
+from xtb import API_VERSION
 from xtb.libxtb import get_api_version
 
 
 def test_api_version():
-    """Ensure that the API version is compatible.
-
-    We currently enforce an exact match between the version of this package
-    and the API version, but this might change in the future.
-    """
-    assert get_api_version() == __version__
+    """Ensure that the API version is compatible."""
+    assert get_api_version() >= API_VERSION
