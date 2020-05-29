@@ -25,6 +25,8 @@ The ``xtb`` model supports any method accepted by ``xtb.utils.get_method``.
 Supported keywords are
 
 ======================== =========== ============================================
+ Keyword                  Default     Description
+======================== =========== ============================================
  accuracy                 1.0         Numerical accuracy of the calculation
  electronic_temperature   300.0       Electronic temperatur for TB methods
  max_iterations           250         Iterations for self-consistent evaluation
@@ -38,6 +40,14 @@ from ..libxtb import VERBOSITY_FULL, get_api_version
 from ..interface import Calculator, XTBException
 from ..utils import get_method, get_solvent
 import qcelemental as qcel
+
+
+_keywords = [
+    "accuracy",
+    "electronic_temperature",
+    "max_iterations",
+    "solvent",
+]
 
 
 def run_qcschema(
@@ -136,17 +146,19 @@ def run_qcschema(
 
         calc.release_output()
 
+        # Check if the calculation has generated a wavefunction
+        _wfn = res.get_number_of_orbitals() > 0
+
+        # First we access properties that should be always available
         properties = {
             "return_energy": res.get_energy(),
             "scf_dipole_moment": res.get_dipole(),
         }
-        extras = dict(
-            xtb={
-                "return_gradient": res.get_gradient(),
-                "mulliken_charges": res.get_charges(),
-                "mayer_indices": res.get_bond_orders(),
-            }
-        )
+        extras = {"xtb": {"return_gradient": res.get_gradient()}}
+        # Charges, bond order and so on are stored in the wavefunction
+        if _wfn:
+            extras["xtb"]["mulliken_charges"] = res.get_charges()
+            extras["xtb"]["mayer_indices"] = res.get_bond_orders()
 
         if atomic_input.driver == "energy":
             return_result = properties["return_energy"]
@@ -155,9 +167,10 @@ def run_qcschema(
         elif atomic_input.driver == "properties":
             return_result = {
                 "dipole": properties["scf_dipole_moment"],
-                "mulliken_charges": extras["xtb"]["mulliken_charges"],
-                "mayer_indices": extras["xtb"]["mayer_indices"],
             }
+            if _wfn:
+                return_result["mulliken_charges"] = extras["xtb"]["mulliken_charges"]
+                return_result["mayer_indices"] = extras["xtb"]["mayer_indices"]
         else:
             return_result = 0.0
             success = False
@@ -169,9 +182,7 @@ def run_qcschema(
                 ),
             )
 
-        ret_data.update(
-            properties=properties, extras=extras, return_result=return_result,
-        )
+        ret_data.update(extras=extras)
 
     except XTBException as ee:
         success = False
@@ -180,15 +191,18 @@ def run_qcschema(
             error=qcel.models.ComputeError(
                 error_type="runtime_error", error_message=str(ee),
             ),
-            return_result=0.0,
-            properties={},
         )
+        return_result = 0.0
+        properties = {}
 
     output = fd.read().decode()
     fd.close()
 
     ret_data.update(
-        provenance=provenance, success=success,
+        provenance=provenance,
+        success=success,
+        properties=properties,
+        return_result=return_result,
     )
 
     return qcel.models.AtomicResult(**ret_data, stdout=output)

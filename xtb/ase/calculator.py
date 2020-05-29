@@ -145,8 +145,10 @@ class XTB(ase_calc.Calculator):
         try:
             self._res = self._xtb.singlepoint(self._res)
         except XTBException:
-            self._xtb.show("Single point calculation failed")
             raise ase_calc.CalculationFailed("xtb could not evaluate input")
+
+        # Check if a wavefunction object is present in results
+        _wfn = self._res.get_number_of_orbitals() > 0
 
         # These properties are garanteed to exist for all implemented calculators
         self.results["energy"] = self._res.get_energy() * Hartree
@@ -159,7 +161,5 @@ class XTB(ase_calc.Calculator):
             self.results["stress"] = _stress.flat[[0, 4, 8, 5, 2, 1]]
         # Not all xtb calculators provide access to partial charges yet,
         # this is mainly an issue for the GFN-FF calculator
-        try:
+        if _wfn:
             self.results["charges"] = self._res.get_charges()
-        except XTBException:
-            self._xtb.show("Charges not provided by calculator")

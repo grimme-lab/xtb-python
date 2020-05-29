@@ -359,3 +359,85 @@ def test_unknown_method():
 
     assert not atomic_result.success
     assert atomic_result.error == error
+
+
+def test_gfn2xtb_solvation():
+    """Solvate a kation of an ionic liquid with GFN2-xTB/GBSA"""
+    thr = 1.0e-8
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule = {
+            "symbols": [
+                "C", "N", "C", "N", "C", "C", "C", "H",
+                "H", "H", "H", "H", "H", "H", "H", "H",
+            ],
+            "geometry": [
+                 0.048282499,     0.057183108,     0.173514640,
+                 0.048282499,     0.057183108,     2.785682877,
+                 2.460933466,     0.057183108,     3.599550067,
+                 3.991384751,    -0.221116838,     1.583647072,
+                 2.540755491,    -0.118599203,    -0.586344180,
+                -2.061048549,     0.828021237,     4.403571784,
+                 6.721736451,     0.210496578,     1.725659980,
+                 3.058786077,     0.070940314,     5.557211706,
+                 3.368228708,    -0.207680886,    -2.461916123,
+                -1.684652926,     0.148551360,    -0.921487085,
+                -3.836824062,     0.378984547,     3.432611673,
+                -1.962159188,    -0.217412975,     6.192197434,
+                -1.859660450,     2.870361499,     4.747464119,
+                 7.499472079,    -0.877758825,     3.310818833,
+                 7.584906591,    -0.429156772,    -0.047375431,
+                 7.008294500,     2.247696785,     2.037956097,
+            ],
+            "molecular_charge": +1,
+        },
+        driver = "energy",
+        model = {
+            "method": "GFN2-xTB",
+        },
+        keywords = {
+            "maxiter": 50,
+            "solvent": "water",
+        },
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert atomic_result.success
+    assert approx(atomic_result.return_result, thr) == -20.8299331650115
+
+
+def test_gfn1xtb_solvation():
+    """Solvate an anion of an ionic liquid with GFN1-xTB/GBSA"""
+    thr = 1.0e-8
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule = {
+            "symbols": [
+                "O", "C", "C", "F", "O", "F", "H",
+            ],
+            "geometry": [
+                 4.877023733,    -3.909030492,     1.796260143,
+                 6.112318716,    -2.778558610,     0.091330457,
+                 7.360520527,    -4.445334728,    -1.932830640,
+                 7.978801077,    -6.767751279,    -1.031771494,
+                 6.374499300,    -0.460299457,    -0.213142194,
+                 5.637581753,    -4.819746139,    -3.831249370,
+                 9.040657008,    -3.585225944,    -2.750722946,
+            ],
+            "molecular_charge": -1,
+        },
+        driver = "energy",
+        model = {
+            "method": "GFN1-xTB",
+        },
+        keywords = {
+            "maxiter": 50,
+            "solvent": "THF",
+        },
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert atomic_result.success
+    assert approx(atomic_result.return_result, thr) == -24.804166790730523
