@@ -20,13 +20,21 @@ for the ``xtb`` program.
 This module provides the basic single point calculator implementation
 to integrate the ``xtb`` API into existing ASE workflows.
 
+Supported properties by this calculator are:
+
+- energy (free_energy)
+- forces
+- stress (GFN0-xTB only)
+- dipole
+- charges
+
 Example
 -------
 >>> from ase.build import molecule
->>> from xtb.interface import Param
+>>> from xtb.utils import get_method
 >>> from xtb.ase.calculator import XTB
 >>> atoms = molecule('H2O')
->>> atoms.set_calculator(XTB(method=Param.GFN2xTB))
+>>> atoms.set_calculator(XTB(method=get_method("GFN2-xTB")))
 >>> atoms.get_potential_energy()
 -137.9677758730299
 >>> atoms.get_forces()
@@ -58,8 +66,12 @@ class XTB(ase_calc.Calculator):
         "stress",
     ]
 
-    default_options = {
+    default_parameters = {
         "method": Param.GFN2xTB,
+        "accuracy": 1.0,
+        "max_iterations": 250,
+        "electronic_temperature": 300.0,
+        "solvent": None,
     }
 
     _res = None
@@ -122,6 +134,10 @@ class XTB(ase_calc.Calculator):
                 _periodic,
             )
             self._xtb.set_verbosity(VERBOSITY_MUTED)
+            self._xtb.set_accuracy(self.parameters.accuracy)
+            self._xtb.set_electronic_temperature(self.parameters.electronic_temperature)
+            self._xtb.set_max_iterations(self.parameters.max_iterations)
+            self._xtb.set_solvent(self.parameters.solvent)
 
         except XTBException:
             raise ase_calc.InputError("Cannot construct calculator for xtb")
@@ -129,8 +145,10 @@ class XTB(ase_calc.Calculator):
         try:
             self._res = self._xtb.singlepoint(self._res)
         except XTBException:
-            self._xtb.show("Single point calculation failed")
             raise ase_calc.CalculationFailed("xtb could not evaluate input")
+
+        # Check if a wavefunction object is present in results
+        _wfn = self._res.get_number_of_orbitals() > 0
 
         # These properties are garanteed to exist for all implemented calculators
         self.results["energy"] = self._res.get_energy() * Hartree
@@ -143,7 +161,5 @@ class XTB(ase_calc.Calculator):
             self.results["stress"] = _stress.flat[[0, 4, 8, 5, 2, 1]]
         # Not all xtb calculators provide access to partial charges yet,
         # this is mainly an issue for the GFN-FF calculator
-        try:
+        if _wfn:
             self.results["charges"] = self._res.get_charges()
-        except XTBException:
-            self._xtb.show("Charges not provided by calculator")
