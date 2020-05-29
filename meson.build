@@ -19,25 +19,37 @@ project(
   'xtb-python',
   'c',
   license: 'LGPL3',
+  default_options: [
+    'default_library=static',
+  ]
 )
 
 cc = meson.get_compiler('c')
 
+# In case you actually want to depend on the xtb shared library
+if get_option('default_library') == 'shared'
+  xtb_dep = declare_dependency(
+    include_directories: include_directories('subprojects/xtb/include'),
+    dependencies: dependency('xtb', version: '>=6.3', required: true),
+  )
+  xtb_header = files('subprojects/xtb/include/xtb.h')
+else
 # Import xtb as subproject, we need the API of version 6.3 or newer,
 # also we disable the internal ctypes Python API of xtb since we provide our own
 # and force xtb to provide a _static_ library to avoid depending on xtb at runtime
-xtb_prj = subproject(
-  'xtb',
-  version: '>=6.3',
-  default_options: [
-    'default_library=static',
-    'static=false',
-    'openmp=@0@'.format(get_option('openmp')),
-    'la_backend=@0@'.format(get_option('la_backend')),
-  ],
-)
-xtb_dep = xtb_prj.get_variable('xtb_dep')
-xtb_header = xtb_prj.get_variable('xtb_header')
+  xtb_prj = subproject(
+    'xtb',
+    version: '>=6.3',
+    default_options: [
+      'default_library=static',
+      'static=false',
+      'openmp=@0@'.format(get_option('openmp')),
+      'la_backend=@0@'.format(get_option('la_backend')),
+    ],
+  )
+  xtb_dep = xtb_prj.get_variable('xtb_dep')
+  xtb_header = xtb_prj.get_variable('xtb_header')
+endif
 
 pymod = import('python')
 python = pymod.find_installation(
