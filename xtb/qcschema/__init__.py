@@ -17,5 +17,5 @@
 
 try:
     import qcelemental
-except ImportError:
-    raise ImportError("This submodule requires QCElemental installed")
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("This submodule requires QCElemental installed")
