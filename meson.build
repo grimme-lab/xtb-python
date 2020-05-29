@@ -56,7 +56,6 @@ python = pymod.find_installation(
   'python@0@'.format(get_option('py')),
   modules: [
     'cffi',
-    'numpy',
   ],
 )
 python_dep = python.dependency(required: true)
