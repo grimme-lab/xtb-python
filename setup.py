@@ -17,4 +17,4 @@
 
 from setuptools import setup
 
-setup()
+setup(package_data={"xtb": ["_libxtb*.so"]})
