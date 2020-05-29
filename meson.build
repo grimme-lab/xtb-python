@@ -29,10 +29,10 @@ cc = meson.get_compiler('c')
 # In case you actually want to depend on the xtb shared library
 if get_option('default_library') == 'shared'
   xtb_dep = declare_dependency(
-    include_directories: include_directories('subprojects/xtb/include'),
+    include_directories: include_directories('include'),
     dependencies: dependency('xtb', version: '>=6.3', required: true),
   )
-  xtb_header = files('subprojects/xtb/include/xtb.h')
+  xtb_header = files('include/xtb.h')
 else
 # Import xtb as subproject, we need the API of version 6.3 or newer,
 # also we disable the internal ctypes Python API of xtb since we provide our own
