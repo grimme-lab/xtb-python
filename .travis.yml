@@ -27,7 +27,7 @@ install:
    - pip install -e .
 
 script:
-   - pytest -v --cov=xtb tests/
+   - pytest -v --cov=xtb --pyargs xtb
 
 after_success:
    - codecov
