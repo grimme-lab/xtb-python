@@ -35,8 +35,8 @@ if get_option('default_library') == 'shared'
   xtb_header = files('include/xtb.h')
 else
 # Import xtb as subproject, we need the API of version 6.3 or newer,
-# also we disable the internal ctypes Python API of xtb since we provide our own
-# and force xtb to provide a _static_ library to avoid depending on xtb at runtime
+# in this mode we want to dependency free regarding xtb, therefore,
+# we force xtb to provide a _static_ library to avoid depending on xtb at runtime
   xtb_prj = subproject(
     'xtb',
     version: '>=6.3',
