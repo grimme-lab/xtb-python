@@ -31,20 +31,32 @@ Supported properties by this calculator are:
 Example
 -------
 >>> from ase.build import molecule
->>> from xtb.utils import get_method
 >>> from xtb.ase.calculator import XTB
 >>> atoms = molecule('H2O')
->>> atoms.set_calculator(XTB(method=get_method("GFN2-xTB")))
+>>> atoms.set_calculator(XTB(method="GFN2-xTB"))
 >>> atoms.get_potential_energy()
 -137.9677758730299
 >>> atoms.get_forces()
 [[ 1.30837706e-16  1.07043680e-15 -7.49514699e-01]
  [-1.05862195e-16 -1.53501989e-01  3.74757349e-01]
  [-2.49755108e-17  1.53501989e-01  3.74757349e-01]]
+
+Supported keywords are
+
+======================== ============ ============================================
+ Keyword                  Default      Description
+======================== ============ ============================================
+ method                   "GFN2-xTB"   Underlying method for energy and forces
+ accuracy                 1.0          Numerical accuracy of the calculation
+ electronic_temperature   300.0        Electronic temperatur for TB methods
+ max_iterations           250          Iterations for self-consistent evaluation
+ solvent                  "none"       GBSA implicit solvent model
+======================== ============ ============================================
 """
 
 from typing import List, Optional
 
+from ..utils import get_method, get_solvent
 from ..libxtb import VERBOSITY_MUTED
 from ..interface import Calculator, Param, XTBException
 import ase.calculators.calculator as ase_calc
@@ -67,11 +79,11 @@ class XTB(ase_calc.Calculator):
     ]
 
     default_parameters = {
-        "method": Param.GFN2xTB,
+        "method": "GFN2-xTB",
         "accuracy": 1.0,
         "max_iterations": 250,
         "electronic_temperature": 300.0,
-        "solvent": None,
+        "solvent": "None",
     }
 
     _res = None
@@ -94,11 +106,21 @@ class XTB(ase_calc.Calculator):
 
         changed_parameters = ase_calc.Calculator.set(self, **kwargs)
 
+        self._check(changed_parameters)
+
         # Always reset the xtb calculator for now
         if changed_parameters:
             self.reset()
 
         return changed_parameters
+
+    def _check(self, parameters):
+        """Verifiy provided parameters are valid"""
+
+        if "method" in parameters and get_method(parameters["method"]) is None:
+            raise ase_calc.InputError(
+                "Invalid method {} provided".format(parameters["method"])
+            )
 
     def reset(self):
         """Clear all information from old calculation"""
@@ -118,6 +140,12 @@ class XTB(ase_calc.Calculator):
             properties = ["energy"]
         ase_calc.Calculator.calculate(self, atoms, properties, system_changes)
 
+        _method = get_method(self.parameters.method)
+        if _method is None:
+            raise ase_calc.InputError(
+                "Invalid method {} provided".format(self.parameters.method)
+            )
+
         try:
             _cell = self.atoms.cell
             _periodic = self.atoms.pbc
@@ -125,7 +153,7 @@ class XTB(ase_calc.Calculator):
             _uhf = int(self.atoms.get_initial_magnetic_moments().sum().round())
 
             self._xtb = Calculator(
-                self.parameters.method,
+                _method,
                 self.atoms.numbers,
                 self.atoms.positions / Bohr,
                 _charge,
@@ -137,7 +165,7 @@ class XTB(ase_calc.Calculator):
             self._xtb.set_accuracy(self.parameters.accuracy)
             self._xtb.set_electronic_temperature(self.parameters.electronic_temperature)
             self._xtb.set_max_iterations(self.parameters.max_iterations)
-            self._xtb.set_solvent(self.parameters.solvent)
+            self._xtb.set_solvent(get_solvent(self.parameters.solvent))
 
         except XTBException:
             raise ase_calc.InputError("Cannot construct calculator for xtb")
