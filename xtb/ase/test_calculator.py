@@ -22,10 +22,9 @@
     energies in eV (while xtb is working internally in atomic units).
 """
 
-from xtb.interface import Param
 from xtb.ase.calculator import XTB
 from ase.atoms import Atoms
-from ase.calculators.calculator import CalculationFailed
+from ase.calculators.calculator import CalculationFailed, InputError
 from pytest import approx, raises
 import numpy as np
 
@@ -81,7 +80,7 @@ def test_gfn2_xtb_0d():
     ])
     dipole_moment = np.array([0.62120710, 0.28006659, 0.04465985])
 
-    calc = XTB(method=Param.GFN2xTB)
+    calc = XTB(method="GFN2-xTB")
     atoms.set_calculator(calc)
 
     assert approx(atoms.get_potential_energy(), thr) == -592.6794366990786
@@ -141,7 +140,7 @@ def test_gfn1_xtb_0d():
     ])
     dipole_moment = np.array([0.76943477, 0.33021928, 0.05670150])
 
-    calc = XTB(method=Param.GFN1xTB)
+    calc = XTB(method="GFN1-xTB")
     atoms.set_calculator(calc)
 
     assert approx(atoms.get_potential_energy(), thr) == -632.7363734598027
@@ -193,7 +192,7 @@ def test_gfn1_xtb_3d():
         -0.37178059, -0.37127074,
     ])
 
-    calc = XTB(method=Param.GFN1xTB)
+    calc = XTB(method="GFN1-xTB")
     atoms.set_calculator(calc)
     assert atoms.pbc.all()
 
@@ -226,7 +225,7 @@ def test_gfn2_xtb_3d():
         pbc = np.array([True, True, True]),
     )
 
-    calc = XTB(method=Param.GFN2xTB)
+    calc = XTB(method="GFN2-xTB")
     atoms.set_calculator(calc)
 
     with raises(CalculationFailed):
@@ -235,3 +234,10 @@ def test_gfn2_xtb_3d():
     # make structure molecular
     atoms.set_pbc(False)
     assert approx(atoms.get_potential_energy(), thr) == -1121.9196707084955
+
+
+def test_invalid_method():
+    """GFN-xTB without method number is invalid, should raise an input error"""
+
+    with raises(InputError):
+        calc = XTB(method="GFN-xTB")
