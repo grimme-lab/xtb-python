@@ -34,22 +34,6 @@ To install ``xtb-python`` from source clone the repository from GitHub with
 
 This will ensure that you have access to the ``xtb-python`` and the parent ``xtb`` repository, with the latter to be found in ``subprojects/xtb``.
 
-Alternatively you can acquire the source by downloading a tarball from github
-with
-
-.. code::
-
-   wget https://github.com/grimme-lab/xtb-python/archive/master.tar.gz
-   tar xzf xtb-python-master.tar.xz
-   cd xtb-python-master
-
-Note that this will not include the ``xtb`` subproject, but it will be downloaded automatically with mesons wrap-tool in the build step later.
-With the latter setup you are also not able contribute to the ``xtb-python`` project.
-
-.. note::
-
-   Usually you only want do download this project as tarball when creating packages for distribution.
-
 
 Building the Extension Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
