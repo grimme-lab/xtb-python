@@ -61,8 +61,9 @@ Contributions are welcome via GitHub pull requests.
 - Be willing to accept criticism and work on improving your code.
 - We encourage and enforce high quality code (most of the checks are automatically
   done for you when submitting a PR):
-  - Add tests for your new features or fixed bugs such that we can ensure that
-    they stay functional and useful
+  
+  - Add tests for your new features or fixed bugs such that we can ensure
+    that they stay functional and useful
   - Use a linter to catch errors before they become bugs,
     either ``flake8`` or ``pylint`` are perfect tools for this job
   - Typehints are mandatory and will be automatically checked with ``mypy``
