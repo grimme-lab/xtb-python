@@ -58,7 +58,7 @@ from typing import List, Optional
 
 from ..utils import get_method, get_solvent
 from ..libxtb import VERBOSITY_MUTED
-from ..interface import Calculator, Param, XTBException
+from ..interface import Calculator, XTBException
 import ase.calculators.calculator as ase_calc
 from ase.atoms import Atoms
 from ase.units import Hartree, Bohr

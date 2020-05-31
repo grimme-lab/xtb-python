@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
 
+from tempfile import NamedTemporaryFile
 from xtb.libxtb import VERBOSITY_MINIMAL
 from xtb.interface import (
     XTBException,
@@ -62,7 +63,6 @@ def test_molecule():
             [ 8.31511620712388,-9.76854236502758,-1.79108242206824],
         ]
     )
-    filename = "xtb-error.log"
     message = "Expecting nuclear fusion warning"
 
     # Constructor should raise an error for nuclear fusion input
@@ -93,10 +93,15 @@ def test_molecule():
         mol.update(np.zeros((24, 3)))
 
     # Redirect API output to file
-    mol.set_output(filename)
+    fd = NamedTemporaryFile()
+    mol.set_output(fd.name)
 
     # Flush the error from the environment log
     mol.show(message)
+
+    # Release output unit
+    mol.release_output()
+    fd.close()
 
     # Reset to correct positions, Molecule object should still be intact
     mol.update(positions, np.zeros((3, 3)))
