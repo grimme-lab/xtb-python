@@ -19,4 +19,5 @@
 # make sure we have a CFFI available
 import cffi
 
-__version__ = "1.0.0"
+__version__ = "20.1"
+API_VERSION = "1.0.0"

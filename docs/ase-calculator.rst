@@ -1,3 +1,4 @@
+.. _ase:
 .. module:: xtb.ase
 
 Atomic Simulation Environment

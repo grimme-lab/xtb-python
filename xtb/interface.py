@@ -137,7 +137,8 @@ _solvents = {
 
 
 class Environment:
-    """Calculation environment
+    """
+    .. Calculation environment
 
     Wraps an API object representing a TEnvironment class in ``xtb``.
     The API object is constructed automatically and deconstructed on garbage
@@ -210,7 +211,8 @@ class Environment:
 
 
 class Molecule(Environment):
-    """Molecular structure data
+    """
+    .. Molecular structure data
 
     Represents a wrapped TMolecule API object in ``xtb``.
     The molecular structure data object has a fixed number of atoms and
@@ -344,7 +346,8 @@ class Molecule(Environment):
 
 
 class Results(Environment):
-    """Calculation results
+    """
+    .. Calculation results
 
     Holds ``xtb`` API object containing results from a single point calculation.
     It can be queried for indiviual properties or used to restart calculations.
@@ -581,7 +584,18 @@ class Results(Environment):
 
 
 class Calculator(Molecule):
-    """Singlepoint calculator
+    """
+    .. Singlepoint calculator
+
+    This calculator represents a calculator object in the ``xtb`` API and
+    provides access to all methods implemented with a unified interface.
+    The API object must be loaded with a parametrisation before it can be
+    used in any other API request.
+
+    The parametrisation loading is included in the initialization in this
+    class, which has the advantage that all API functionality is readily
+    available, the downside is that a calculator object on the Python side
+    can only carry one distinct parametrisation, which is not allowed to change.
 
     Examples
     --------

@@ -25,7 +25,7 @@ Example
 -------
 >>> from xtb.libxtb import get_api_version
 >>> get_api_version()
-"1.0.0"
+'1.0.0'
 """
 
 try:

@@ -17,5 +17,5 @@
 
 try:
     import ase
-except ImportError:
-    raise ImportError("This submodule requires ASE installed")
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("This submodule requires ASE installed")
