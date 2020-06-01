@@ -1,5 +1,5 @@
-.. _ase:
 .. module:: xtb.ase
+.. _ase:
 
 Atomic Simulation Environment
 =============================

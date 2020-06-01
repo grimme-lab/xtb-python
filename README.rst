@@ -66,6 +66,13 @@ as usual with
 For more details visit the `documentation <https://xtb-python.readthedocs.io/en/latest/installation.html>`_.
 
 
+Contributing
+------------
+
+Contributions to this open source project are very welcome, before starting
+review our `contributing guidelines <CONTRIBUTING.rst>`_ first, please.
+
+
 License
 -------
 
