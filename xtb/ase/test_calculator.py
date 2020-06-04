@@ -80,8 +80,7 @@ def test_gfn2_xtb_0d():
     ])
     dipole_moment = np.array([0.62120710, 0.28006659, 0.04465985])
 
-    calc = XTB(method="GFN2-xTB")
-    atoms.set_calculator(calc)
+    calc = XTB(method="GFN2-xTB", atoms=atoms)
 
     assert approx(atoms.get_potential_energy(), thr) == -592.6794366990786
     assert approx(atoms.get_forces(), thr) == forces
@@ -140,8 +139,7 @@ def test_gfn1_xtb_0d():
     ])
     dipole_moment = np.array([0.76943477, 0.33021928, 0.05670150])
 
-    calc = XTB(method="GFN1-xTB")
-    atoms.set_calculator(calc)
+    atoms.calc = XTB(method="GFN1-xTB")
 
     assert approx(atoms.get_potential_energy(), thr) == -632.7363734598027
     assert approx(atoms.get_forces(), thr) == forces
@@ -234,6 +232,10 @@ def test_gfn2_xtb_3d():
     # make structure molecular
     atoms.set_pbc(False)
     assert approx(atoms.get_potential_energy(), thr) == -1121.9196707084955
+
+    with raises(InputError):
+        atoms.positions = np.zeros((len(atoms), 3))
+        calc.calculate(atoms=atoms, system_changes=["positions"])
 
 
 def test_invalid_method():
