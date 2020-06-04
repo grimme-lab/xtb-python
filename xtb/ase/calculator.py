@@ -51,6 +51,7 @@ Supported keywords are
  electronic_temperature   300.0        Electronic temperatur for TB methods
  max_iterations           250          Iterations for self-consistent evaluation
  solvent                  "none"       GBSA implicit solvent model
+ cache_api                True         Reuse generate API objects (recommended)
 ======================== ============ ============================================
 """
 
@@ -84,6 +85,7 @@ class XTB(ase_calc.Calculator):
         "max_iterations": 250,
         "electronic_temperature": 300.0,
         "solvent": "None",
+        "cache_api": True,
     }
 
     _res = None
@@ -96,25 +98,41 @@ class XTB(ase_calc.Calculator):
 
         ase_calc.Calculator.__init__(self, atoms=atoms, **kwargs)
 
-        # loads the default parameters and updates with actual values
-        self.parameters = self.get_default_parameters()
-        # now set all parameters
-        self.set(**kwargs)
-
-    def set(self, **kwargs):
+    def set(self, **kwargs) -> dict:
         """Set new parameters to xtb"""
 
         changed_parameters = ase_calc.Calculator.set(self, **kwargs)
 
-        self._check(changed_parameters)
+        self._check_parameters(changed_parameters)
 
-        # Always reset the xtb calculator for now
+        # Always reset the calculation if parameters change
         if changed_parameters:
             self.reset()
 
+        # If the method is changed, invalidate the cached calculator as well
+        if "method" in changed_parameters:
+            self._xtb = None
+            self._res = None
+
+        # Minor changes can be updated in the API calculator directly
+        if self._xtb is not None:
+            if "accuracy" in changed_parameters:
+                self._xtb.set_accuracy(self.parameters.accuracy)
+
+            if "electronic_temperature" in changed_parameters:
+                self._xtb.set_electronic_temperature(
+                    self.parameters.electronic_temperature
+                )
+
+            if "max_iterations" in changed_parameters:
+                self._xtb.set_max_iterations(self.parameters.max_iterations)
+
+            if "solvent" in changed_parameters:
+                self._xtb.set_solvent(get_solvent(self.parameters.solvent))
+
         return changed_parameters
 
-    def _check(self, parameters):
+    def _check_parameters(self, parameters: dict) -> None:
         """Verifiy provided parameters are valid"""
 
         if "method" in parameters and get_method(parameters["method"]) is None:
@@ -122,23 +140,43 @@ class XTB(ase_calc.Calculator):
                 "Invalid method {} provided".format(parameters["method"])
             )
 
-    def reset(self):
+    def reset(self) -> None:
         """Clear all information from old calculation"""
         ase_calc.Calculator.reset(self)
 
-        self._res = None
+        if not self.parameters.cache_api:
+            self._xtb = None
+            self._res = None
 
-    def calculate(
-        self,
-        atoms: Optional[Atoms] = None,
-        properties: List[str] = None,
-        system_changes: List[str] = ase_calc.all_changes,
-    ):
-        """Perform actual calculation with by calling the xtb API"""
+    def _check_api_calculator(self, system_changes: List[str]) -> None:
+        """Check state of API calculator and reset if necessary"""
 
-        if not properties:
-            properties = ["energy"]
-        ase_calc.Calculator.calculate(self, atoms, properties, system_changes)
+        # Changes in positions and cell parameters can use a normal update
+        _reset = system_changes.copy()
+        if "positions" in _reset:
+            _reset.remove("positions")
+        if "cell" in _reset:
+            _reset.remove("cell")
+
+        # Invalidate cached calculator and results object
+        if _reset:
+            self._xtb = None
+            self._res = None
+        else:
+            if system_changes and self._xtb is not None:
+                try:
+                    _cell = self.atoms.cell
+                    self._xtb.update(
+                        self.atoms.positions / Bohr, _cell / Bohr,
+                    )
+                # An exception in this part means the geometry is bad,
+                # still we will give a complete reset a try as well
+                except XTBException:
+                    self._xtb = None
+                    self._res = None
+
+    def _create_api_calculator(self) -> Calculator:
+        """Create a new API calculator object"""
 
         _method = get_method(self.parameters.method)
         if _method is None:
@@ -152,7 +190,7 @@ class XTB(ase_calc.Calculator):
             _charge = self.atoms.get_initial_charges().sum()
             _uhf = int(self.atoms.get_initial_magnetic_moments().sum().round())
 
-            self._xtb = Calculator(
+            calc = Calculator(
                 _method,
                 self.atoms.numbers,
                 self.atoms.positions / Bohr,
@@ -161,14 +199,33 @@ class XTB(ase_calc.Calculator):
                 _cell / Bohr,
                 _periodic,
             )
-            self._xtb.set_verbosity(VERBOSITY_MUTED)
-            self._xtb.set_accuracy(self.parameters.accuracy)
-            self._xtb.set_electronic_temperature(self.parameters.electronic_temperature)
-            self._xtb.set_max_iterations(self.parameters.max_iterations)
-            self._xtb.set_solvent(get_solvent(self.parameters.solvent))
+            calc.set_verbosity(VERBOSITY_MUTED)
+            calc.set_accuracy(self.parameters.accuracy)
+            calc.set_electronic_temperature(self.parameters.electronic_temperature)
+            calc.set_max_iterations(self.parameters.max_iterations)
+            calc.set_solvent(get_solvent(self.parameters.solvent))
 
         except XTBException:
             raise ase_calc.InputError("Cannot construct calculator for xtb")
+
+        return calc
+
+    def calculate(
+        self,
+        atoms: Optional[Atoms] = None,
+        properties: List[str] = None,
+        system_changes: List[str] = ase_calc.all_changes,
+    ) -> None:
+        """Perform actual calculation with by calling the xtb API"""
+
+        if not properties:
+            properties = ["energy"]
+        ase_calc.Calculator.calculate(self, atoms, properties, system_changes)
+
+        self._check_api_calculator(system_changes)
+
+        if self._xtb is None:
+            self._xtb = self._create_api_calculator()
 
         try:
             self._res = self._xtb.singlepoint(self._res)
