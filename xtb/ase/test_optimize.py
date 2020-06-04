@@ -59,7 +59,7 @@ def test_gfn1xtb_bfgs():
         ]),
     )
 
-    atoms.calc = XTB(method="GFN1-xTB", accuracy=2.0, cache_results=False)
+    atoms.calc = XTB(method="GFN1-xTB", accuracy=2.0, cache_api=False)
     opt = BFGS(atoms)
     opt.run(fmax=0.1)
 
@@ -142,7 +142,7 @@ def test_gfn2xtb_velocityverlet():
         ]),
     )
 
-    calc = XTB(method="GFN2-xTB", cache_results=False)
+    calc = XTB(method="GFN2-xTB", cache_api=False)
     atoms.set_calculator(calc)
 
     dyn = VelocityVerlet(atoms, timestep=1.0*fs)
@@ -151,7 +151,7 @@ def test_gfn2xtb_velocityverlet():
     assert approx(atoms.get_potential_energy(), thr) == -896.9772346260584
     assert approx(atoms.get_kinetic_energy(), thr) == 0.022411127028842362
 
-    atoms.calc.set(cache_results=True)
+    atoms.calc.set(cache_api=True)
     dyn.run(20)
 
     assert approx(atoms.get_potential_energy(), thr) == -896.9913862530841

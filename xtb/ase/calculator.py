@@ -84,7 +84,7 @@ class XTB(ase_calc.Calculator):
         "max_iterations": 250,
         "electronic_temperature": 300.0,
         "solvent": "None",
-        "cache_results": True,
+        "cache_api": True,
     }
 
     _res = None
@@ -143,7 +143,7 @@ class XTB(ase_calc.Calculator):
         """Clear all information from old calculation"""
         ase_calc.Calculator.reset(self)
 
-        if not self.parameters.cache_results:
+        if not self.parameters.cache_api:
             self._xtb = None
             self._res = None
 
