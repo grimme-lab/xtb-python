@@ -97,14 +97,6 @@ class XTB(ase_calc.Calculator):
 
         ase_calc.Calculator.__init__(self, atoms=atoms, **kwargs)
 
-        # loads the default parameters and updates with actual values
-        self.parameters = self.get_default_parameters()
-        # now set all parameters
-        self.set(**kwargs)
-
-        if self.atoms is not None:
-            self._xtb = self._create_api_calculator()
-
     def set(self, **kwargs) -> dict:
         """Set new parameters to xtb"""
 
@@ -112,9 +104,30 @@ class XTB(ase_calc.Calculator):
 
         self._check_parameters(changed_parameters)
 
-        # Always reset the xtb calculator for now
+        # Always reset the calculation if parameters change
         if changed_parameters:
             self.reset()
+
+        # If the method is changed, invalidate the cached calculator as well
+        if "method" in changed_parameters:
+            self._xtb = None
+            self._res = None
+
+        # Minor changes can be updated in the API calculator directly
+        if self._xtb is not None:
+            if "accuracy" in changed_parameters:
+                self._xtb.set_accuracy(self.parameters.accuracy)
+
+            if "electronic_temperature" in changed_parameters:
+                self._xtb.set_electronic_temperature(
+                    self.parameters.electronic_temperature
+                )
+
+            if "max_iterations" in changed_parameters:
+                self._xtb.set_max_iterations(self.parameters.max_iterations)
+
+            if "solvent" in changed_parameters:
+                self._xtb.set_solvent(get_solvent(self.parameters.solvent))
 
         return changed_parameters
 

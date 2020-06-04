@@ -87,6 +87,15 @@ def test_gfn2_xtb_0d():
     assert approx(atoms.get_charges(), thr) == charges
     assert approx(atoms.get_dipole_moment(), thr) == dipole_moment
 
+    atoms.calc.set(
+        accuracy=0.1,
+        electronic_temperature=500.0,
+        max_iterations=20,
+        solvent="ch2cl2",
+    )
+
+    assert approx(atoms.get_potential_energy(), thr) == -592.9940608761889
+
 
 def test_gfn1_xtb_0d():
     """Test ASE interface to GFN1-xTB"""
