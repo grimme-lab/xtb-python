@@ -51,6 +51,7 @@ Supported keywords are
  electronic_temperature   300.0        Electronic temperatur for TB methods
  max_iterations           250          Iterations for self-consistent evaluation
  solvent                  "none"       GBSA implicit solvent model
+ cache_api                True         Reuse generate API objects (recommended)
 ======================== ============ ============================================
 """
 
