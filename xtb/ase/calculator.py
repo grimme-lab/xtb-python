@@ -150,10 +150,6 @@ class XTB(ase_calc.Calculator):
     def _check_api_calculator(self, system_changes: List[str]) -> None:
         """Check state of API calculator and reset if necessary"""
 
-        # Doesn't make sense without atoms
-        if self.atoms is None:
-            return
-
         # Changes in positions and cell parameters can use a normal update
         _reset = system_changes.copy()
         if "positions" in _reset:
