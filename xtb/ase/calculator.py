@@ -84,6 +84,7 @@ class XTB(ase_calc.Calculator):
         "max_iterations": 250,
         "electronic_temperature": 300.0,
         "solvent": "None",
+        "cache_results": True,
     }
 
     _res = None
@@ -129,8 +130,9 @@ class XTB(ase_calc.Calculator):
         """Clear all information from old calculation"""
         ase_calc.Calculator.reset(self)
 
-        self._xtb = None
-        self._res = None
+        if not self.parameters.cache_results:
+            self._xtb = None
+            self._res = None
 
     def _check_api_calculator(self, system_changes: List[str]) -> None:
         """Check state of API calculator and reset if necessary"""
