@@ -633,3 +633,78 @@ def test_gfn2xtb_orbitals():
         or approx(this_coefficients[16], thr) == -coefficients17
     assert approx(this_coefficients[17], thr) == +coefficients18 \
         or approx(this_coefficients[17], thr) == -coefficients18
+
+
+def test_gfn1xtb_external_charges():
+    """Test external charge potentials together with the GFN1-xTB method"""
+    thr = 1.0e-8
+
+    numbers = np.array([7, 1, 1, 6, 1, 1, 1])
+    positions1 = np.array([
+        [-2.74753712457143,  0.37784000250000, -1.43187391300000],
+        [-1.18171822157143, -0.72737292050000, -1.52700665300000],
+        [-3.99820987557143, -0.35850981350000, -2.67576139800000],
+        [-3.80581663657143,  0.22757315950000,  1.11430154300000],
+        [-5.49538086757143,  1.39513306450000,  1.22999226200000],
+        [-4.30486812157143, -1.67583868950000,  1.75209463100000],
+        [-2.44826907957143,  0.99721383450000,  2.45438316600000],
+    ])
+    positions2 = np.array([
+        [ 2.99257143742857, -1.37287306250000, -1.14373597500000],
+        [ 3.55243804342857, -0.85407196950000, -2.89737380800000],
+        [ 4.17090944942857, -2.78580288550000, -0.62369309000000],
+        [ 3.29536218742857,  0.77236389950000,  0.58285999400000],
+        [ 2.78477654742857,  0.17767510450000,  2.48326881100000],
+        [ 5.19909163542857,  1.56940602550000,  0.65272644000000],
+        [ 1.98665062642857,  2.25726425050000,  0.02981799000000],
+    ])
+    ext_charges1 = np.array([-0.49337941,  0.19159242,  0.18562205,  0.06205481,
+                              0.01529955,  0.00541236,  0.01570019])
+    ext_charges2 = np.array([-0.48186275,  0.19166815,  0.19110522,  0.05778421,
+                              0.02072806,  0.00885202,  0.02942314])
+    charges1 = np.array([
+        -0.4893542979011367, 0.20004214919138275, 0.1869926298627577,
+         0.0615170739008161, 0.01681197840166056, 0.0066754441219079,
+         0.0173150224226123,
+    ])
+    charges2 = np.array([
+        -0.4920274542173372, 0.18970771261324710, 0.1885460472894940,
+         0.0588378643836063, 0.01936872263252927, 0.0072127270460456,
+         0.0283543802524126,
+    ])
+
+    calc = Calculator(Param.GFN1xTB, numbers, positions1)
+
+    res = calc.singlepoint()
+    assert approx(res.get_energy(), thr) == -8.008992383435352
+
+    calc.set_external_charges(numbers, ext_charges2, positions2)
+
+    res = calc.singlepoint(res)
+
+    assert approx(res.get_energy(), thr) == -8.009880136017214
+    assert approx(res.get_charges(), thr) == charges1
+
+    calc.update(positions2)
+    calc.set_external_charges(numbers, ext_charges1, positions1)
+
+    res = calc.singlepoint()
+
+    assert approx(res.get_energy(), thr) == -8.009764296271317
+    assert approx(res.get_charges(), thr) == charges2
+
+    calc.release_external_charges()
+
+    res = calc.singlepoint(res)
+
+    assert approx(res.get_energy(), thr) == -8.008980959176283
+
+    with raises(ValueError):
+        calc.set_external_charges(numbers, ext_charges2, np.zeros(9))
+
+    with raises(ValueError):
+        calc.set_external_charges(numbers, np.zeros(4), positions2)
+
+    # Try to circumvent the wrapper to actually trip off an API error
+    with raises(XTBException):
+        calc.set_external_charges(np.zeros(0), np.zeros(0), np.zeros(0))

@@ -691,6 +691,47 @@ class Calculator(Molecule):
         if self.check() != 0:
             raise XTBException(self.get_error("Failed to set solvent model"))
 
+    def set_external_charges(
+        self, numbers: np.ndarray, charges: np.ndarray, positions: np.ndarray
+    ) -> None:
+        """Set an external point charge field"""
+
+        _npcem = numbers.size
+        if _npcem != charges.size:
+            raise ValueError(
+                "Dimension missmatch between atomic numbers and partial charges"
+            )
+
+        if 3 * _npcem != positions.size:
+            raise ValueError(
+                "Dimension missmatch between atomic numbers and cartesian coordinates"
+            )
+
+        _numbers = np.array(numbers, dtype="i4")
+        _charges = np.array(charges, dtype=float)
+        _positions = np.array(positions, dtype=float)
+
+        _lib.xtb_setExternalCharges(
+            self._env,
+            self._calc,
+            _ref("int", _npcem),
+            _cast("int*", _numbers),
+            _cast("double*", _charges),
+            _cast("double*", _positions),
+        )
+
+        if self.check() != 0:
+            raise XTBException(self.get_error("Failed to set external charge field"))
+
+    def release_external_charges(self) -> None:
+        """Unset external point charge field"""
+        _lib.xtb_releaseExternalCharges(self._env, self._calc)
+
+        if self.check() != 0:
+            raise XTBException(
+                self.get_error("Failed to release external charge field")
+            )
+
     def set_accuracy(self, accuracy: float) -> None:
         """Set numerical accuracy for calculation, ranges from 1000 to 0.0001,
         values outside this range will be cutted with warning placed in the
