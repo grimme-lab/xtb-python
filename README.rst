@@ -1,6 +1,9 @@
 Python API for the extended tight binding program
 =================================================
 
+.. image:: https://img.shields.io/conda/vn/conda-forge/xtb-python.svg
+   :alt: Conda Version
+   :target: https://anaconda.org/conda-forge/xtb-python
 .. image:: https://img.shields.io/github/license/grimme-lab/xtb-python
    :alt: License
    :target: COPYING.LESSER
@@ -25,6 +28,39 @@ requiring an additional ``xtb`` installation.
 
 Installation
 ------------
+
+Depending on what you plan to do with ``xtb-python`` there are two recommended
+ways to install. If you plan to use this project in your workflows, proceed
+with the conda installation, if you plan to develop on this project, proceed
+with the build from source.
+
+For more details visit the `documentation <https://xtb-python.readthedocs.io/en/latest/installation.html>`_.
+
+
+With Conda
+~~~~~~~~~~
+
+Installing ``xtb-python`` from the ``conda-forge`` channel can be achieved by adding ``conda-forge`` to your channels with:
+
+.. code::
+
+   conda config --add channels conda-forge
+
+Once the ``conda-forge`` channel has been enabled, ``xtb-python`` can be installed with:
+
+.. code::
+
+   conda install xtb-python
+
+It is possible to list all of the versions of ``xtb-python`` available on your platform with:
+
+.. code::
+
+   conda search xtb-python --channel conda-forge
+
+
+From Source
+~~~~~~~~~~~
 
 When building this project from source, make sure to initialize the git submodules
 with
@@ -62,8 +98,6 @@ as usual with
 .. code::
 
    pip install -e .
-
-For more details visit the `documentation <https://xtb-python.readthedocs.io/en/latest/installation.html>`_.
 
 
 Contributing
