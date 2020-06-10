@@ -30,6 +30,8 @@ For more details on the ``xtb`` API dependency see :ref:`building`.
 Installation with Conda
 -----------------------
 
+For details on how to setup conda look up the `conda documentation <https://docs.conda.io>`_.
+
 Installing ``xtb-python`` from the conda-forge channel can be achieved by adding conda-forge to your channels with:
 
 .. code-block:: none
