@@ -22,7 +22,7 @@ import numpy as np
 
 def test_gfn2xtb_energy():
     """Use QCSchema to calculate the energy of a halogen bond compound"""
-    thr = 1.0e-8
+    thr = 1.0e-7
 
     atomic_input = qcel.models.AtomicInput(
         molecule = {
@@ -75,7 +75,7 @@ def test_gfn2xtb_energy():
 
 def test_gfn1xtb_gradient():
     """Use QCSchema to perform a GFN1-xTB calculation on a mindless molecule"""
-    thr = 1.0e-8
+    thr = 1.0e-7
 
     atomic_input = {
         "molecule": {
@@ -139,7 +139,7 @@ def test_gfn1xtb_gradient():
 
 def test_gfn2xtb_gradient():
     """Use QCSchema to perform a GFN2-xTB calculation on a mindless molecule"""
-    thr = 1.0e-8
+    thr = 1.0e-7
 
     atomic_input = {
         "molecule": {
@@ -363,7 +363,7 @@ def test_unknown_method():
 
 def test_gfn2xtb_solvation():
     """Solvate a kation of an ionic liquid with GFN2-xTB/GBSA"""
-    thr = 1.0e-8
+    thr = 1.0e-7
 
     atomic_input = qcel.models.AtomicInput(
         molecule = {
@@ -409,7 +409,7 @@ def test_gfn2xtb_solvation():
 
 def test_gfn1xtb_solvation():
     """Solvate an anion of an ionic liquid with GFN1-xTB/GBSA"""
-    thr = 1.0e-8
+    thr = 1.0e-7
 
     atomic_input = qcel.models.AtomicInput(
         molecule = {

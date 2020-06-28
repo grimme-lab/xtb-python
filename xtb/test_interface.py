@@ -109,7 +109,7 @@ def test_molecule():
 
 def test_gfn2_xtb_0d():
     """check if the GFN2-xTB interface is working correctly."""
-    thr = 1.0e-8
+    thr = 1.0e-7
     thr2 = 1.0e-6
 
     numbers = np.array(
@@ -196,7 +196,7 @@ def test_gfn2_xtb_0d():
 
 def test_gfn1_xtb_0d():
     """check if the GFN1-xTB interface is working correctly."""
-    thr = 1.0e-8
+    thr = 1.0e-7
     thr2 = 1.0e-6
 
     numbers = np.array(
@@ -347,7 +347,7 @@ def test_gfn2_xtb_3d():
 
 def test_gfn1_xtb_3d():
     """Test GFN1-xTB for periodic input"""
-    thr = 1.0e-8
+    thr = 1.0e-7
     thr2 = 1.0e-6
 
     numbers = np.array(
