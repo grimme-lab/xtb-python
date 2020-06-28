@@ -21,6 +21,7 @@ project(
   license: 'LGPL3',
   default_options: [
     'default_library=static',
+    'optimization=2',
   ]
 )
 
@@ -45,6 +46,7 @@ else
       'static=false',
       'openmp=@0@'.format(get_option('openmp')),
       'la_backend=@0@'.format(get_option('la_backend')),
+      'optimization=@0@'.format(get_option('optimization')),
     ],
   )
   xtb_dep = xtb_prj.get_variable('xtb_dep')
