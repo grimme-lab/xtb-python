@@ -69,8 +69,8 @@ def test_gfn2xtb_energy():
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.return_result, thr) == -26.60185037124828
-    assert approx(atomic_result.properties.scf_dipole_moment, thr) == dipole_moment
+    assert approx(atomic_result.return_result, abs=thr) == -26.60185037124828
+    assert approx(atomic_result.properties.scf_dipole_moment, abs=thr) == dipole_moment
 
 
 def test_gfn1xtb_gradient():
@@ -132,9 +132,9 @@ def test_gfn1xtb_gradient():
     atomic_result = run_qcschema(qcel.models.AtomicInput(**atomic_input))
 
     assert atomic_result.success
-    assert approx(atomic_result.properties.return_energy, thr) == -33.63768565903155
-    assert approx(atomic_result.properties.scf_dipole_moment, thr) == dipole_moment
-    assert approx(atomic_result.return_result, thr) == gradient
+    assert approx(atomic_result.properties.return_energy, abs=thr) == -33.63768565903155
+    assert approx(atomic_result.properties.scf_dipole_moment, abs=thr) == dipole_moment
+    assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
 def test_gfn2xtb_gradient():
@@ -196,9 +196,9 @@ def test_gfn2xtb_gradient():
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.properties.return_energy, thr) == -25.0841508410945
-    assert approx(atomic_result.properties.scf_dipole_moment, thr) == dipole_moment
-    assert approx(atomic_result.return_result, thr) == gradient
+    assert approx(atomic_result.properties.return_energy, abs=thr) == -25.0841508410945
+    assert approx(atomic_result.properties.scf_dipole_moment, abs=thr) == dipole_moment
+    assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
 def test_gfn1xtb_hessian():
@@ -284,7 +284,7 @@ def test_gfn2xtb_properties():
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.return_result['mulliken_charges'], thr) == charges
+    assert approx(atomic_result.return_result['mulliken_charges'], abs=thr) == charges
 
 
 def test_gfn2xtb_error():
@@ -404,7 +404,7 @@ def test_gfn2xtb_solvation():
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.return_result, thr) == -20.8299331650115
+    assert approx(atomic_result.return_result, abs=thr) == -20.8299331650115
 
 
 def test_gfn1xtb_solvation():
@@ -440,4 +440,4 @@ def test_gfn1xtb_solvation():
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.return_result, thr) == -24.804166790730523
+    assert approx(atomic_result.return_result, abs=thr) == -24.804166790730523

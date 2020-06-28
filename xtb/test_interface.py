@@ -189,9 +189,9 @@ def test_gfn2_xtb_0d():
 
     res = calc.singlepoint()
 
-    assert approx(res.get_energy(), thr) == -42.14746312757416
-    assert approx(res.get_gradient(), thr) == gradient
-    assert approx(res.get_charges(), thr2) == charges
+    assert approx(res.get_energy(), abs=thr) == -42.14746312757416
+    assert approx(res.get_gradient(), abs=thr) == gradient
+    assert approx(res.get_charges(), abs=thr2) == charges
 
 
 def test_gfn1_xtb_0d():
@@ -291,9 +291,9 @@ def test_gfn1_xtb_0d():
     # Start calculation by restarting with result
     res = calc.singlepoint(res)
 
-    assert approx(res.get_energy(), thr) == -44.509702418208896
-    assert approx(res.get_gradient(), thr) == gradient
-    assert approx(res.get_dipole(), thr2) == dipole
+    assert approx(res.get_energy(), abs=thr) == -44.509702418208896
+    assert approx(res.get_gradient(), abs=thr) == gradient
+    assert approx(res.get_dipole(), abs=thr2) == dipole
 
 
 def test_gfn2_xtb_3d():
@@ -427,9 +427,9 @@ def test_gfn1_xtb_3d():
     # access the results
     calc.singlepoint(res)
 
-    assert approx(res.get_energy(), thr) == -31.906084801853034
-    assert approx(res.get_gradient(), thr) == gradient
-    assert approx(res.get_charges(), thr2) == charges
+    assert approx(res.get_energy(), abs=thr) == -31.906084801853034
+    assert approx(res.get_gradient(), abs=thr) == gradient
+    assert approx(res.get_charges(), abs=thr2) == charges
 
 
 def test_gfn1xtb_solvation():
@@ -485,15 +485,15 @@ def test_gfn1xtb_solvation():
 
     res = calc.singlepoint()
 
-    assert approx(res.get_energy(), thr) == -33.66717660261584
-    assert approx(res.get_dipole(), thr) == dipole
-    assert approx(res.get_gradient(), thr) == gradient
+    assert approx(res.get_energy(), abs=thr) == -33.66717660261584
+    assert approx(res.get_dipole(), abs=thr) == dipole
+    assert approx(res.get_gradient(), abs=thr) == gradient
 
     calc.set_solvent()
 
     res = calc.singlepoint(res, copy=True)
 
-    assert approx(res.get_energy(), thr) == -33.63768565903155
+    assert approx(res.get_energy(), abs=thr) == -33.63768565903155
 
 
 def test_gfn2xtb_solvation():
@@ -547,15 +547,15 @@ def test_gfn2xtb_solvation():
 
     res = calc.singlepoint()
 
-    assert approx(res.get_energy(), thr) == -25.0841508410945
+    assert approx(res.get_energy(), abs=thr) == -25.0841508410945
 
     calc.set_solvent(Solvent.ch2cl2)
 
     res = calc.singlepoint(res)
 
-    assert approx(res.get_energy(), thr) == -25.11573992702904
-    assert approx(res.get_dipole(), thr) == dipole
-    assert approx(res.get_gradient(), thr) == gradient
+    assert approx(res.get_energy(), abs=thr) == -25.11573992702904
+    assert approx(res.get_dipole(), abs=thr) == dipole
+    assert approx(res.get_gradient(), abs=thr) == gradient
 
 
 def test_gfn1xtb_orbitals():
@@ -613,10 +613,10 @@ def test_gfn1xtb_orbitals():
     res = calc.singlepoint()
 
     assert res.get_number_of_orbitals() == 8
-    assert approx(res.get_orbital_eigenvalues(), thr) == eigenvalues
-    assert approx(res.get_orbital_occupations(), thr) == occupations
+    assert approx(res.get_orbital_eigenvalues(), abs=thr) == eigenvalues
+    assert approx(res.get_orbital_occupations(), abs=thr) == occupations
     this_coefficients = res.get_orbital_coefficients()
     # remember, signs of wavefunctions are tricky, better get this one right
     for i in range(res.get_number_of_orbitals()):
-        assert approx(this_coefficients[i], thr) == +coefficients[i] \
-            or approx(this_coefficients[i], thr) == -coefficients[i]
+        assert approx(this_coefficients[i], abs=thr) == +coefficients[i] \
+            or approx(this_coefficients[i], abs=thr) == -coefficients[i]
