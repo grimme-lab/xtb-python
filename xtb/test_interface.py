@@ -190,7 +190,7 @@ def test_gfn2_xtb_0d():
     res = calc.singlepoint()
 
     assert approx(res.get_energy(), abs=thr) == -42.14746312757416
-    assert approx(res.get_gradient(), abs=thr) == gradient
+    assert approx(res.get_gradient(), abs=thr2) == gradient
     assert approx(res.get_charges(), abs=thr2) == charges
 
 
@@ -292,7 +292,7 @@ def test_gfn1_xtb_0d():
     res = calc.singlepoint(res)
 
     assert approx(res.get_energy(), abs=thr) == -44.509702418208896
-    assert approx(res.get_gradient(), abs=thr) == gradient
+    assert approx(res.get_gradient(), abs=thr2) == gradient
     assert approx(res.get_dipole(), abs=thr2) == dipole
 
 
@@ -573,40 +573,6 @@ def test_gfn1xtb_orbitals():
         -0.15792833, -0.05043755,  0.33342098,  0.45699087,
     ])
     occupations = np.array([2.0, 2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 0.0])
-    coefficients = np.array([
-        [
-            -7.96486314e-01,  1.91513472e-15, -3.81069986e-01,  1.06627860e-15,
-            -3.85581374e-01, -2.77555756e-16,  6.66133815e-16,  8.73808841e-01,
-        ],
-        [
-             8.67361738e-16,  7.06326895e-01,  2.06085149e-15,  5.99181075e-17,
-            -2.35922393e-16,  9.10524298e-02, -9.80328049e-01,  1.05471187e-15,
-        ],
-        [
-             6.66133815e-16, -2.22044605e-16,  2.27595720e-15,  1.00000000e+00,
-            -1.66533454e-16,  1.11022302e-16, -2.77555756e-17,  1.38777878e-17,
-        ],
-        [
-            -7.03752745e-02, -2.35922393e-15,  8.51677843e-01, -1.85493019e-15,
-            -1.38148603e-01,  4.02455846e-16,  7.77156117e-16,  7.23141261e-01,
-        ],
-        [
-            -1.79427083e-01,  3.32421120e-01,  1.83354106e-01, -2.70755099e-17,
-             3.63066743e-01, -3.84174939e-01,  8.29758195e-01, -7.50228671e-01,
-        ],
-        [
-            -1.38489858e-02,  4.55724612e-02,  4.79829369e-02, -2.77816056e-16,
-            -5.47923122e-01,  6.88051905e-01,  3.00554964e-01, -4.79998559e-01,
-        ],
-        [
-            -1.79427083e-01, -3.32421120e-01,  1.83354106e-01, -4.15348025e-16,
-             3.63066743e-01,  3.84174939e-01, -8.29758195e-01, -7.50228671e-01,
-        ],
-        [
-            -1.38489858e-02, -4.55724612e-02,  4.79829369e-02, -1.37843421e-16,
-            -5.47923122e-01, -6.88051905e-01, -3.00554964e-01, -4.79998559e-01,
-        ],
-    ], order='F')
 
     calc = Calculator(Param.GFN1xTB, numbers, positions)
 
@@ -615,8 +581,3 @@ def test_gfn1xtb_orbitals():
     assert res.get_number_of_orbitals() == 8
     assert approx(res.get_orbital_eigenvalues(), abs=thr) == eigenvalues
     assert approx(res.get_orbital_occupations(), abs=thr) == occupations
-    this_coefficients = res.get_orbital_coefficients()
-    # remember, signs of wavefunctions are tricky, better get this one right
-    for i in range(res.get_number_of_orbitals()):
-        assert approx(this_coefficients[i], abs=thr) == +coefficients[i] \
-            or approx(this_coefficients[i], abs=thr) == -coefficients[i]
