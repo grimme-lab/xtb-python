@@ -82,10 +82,10 @@ def test_gfn2_xtb_0d():
 
     calc = XTB(method="GFN2-xTB", atoms=atoms)
 
-    assert approx(atoms.get_potential_energy(), thr) == -592.6794366990786
-    assert approx(atoms.get_forces(), thr) == forces
-    assert approx(atoms.get_charges(), thr) == charges
-    assert approx(atoms.get_dipole_moment(), thr) == dipole_moment
+    assert approx(atoms.get_potential_energy(), abs=thr) == -592.6794366990786
+    assert approx(atoms.get_forces(), abs=thr) == forces
+    assert approx(atoms.get_charges(), abs=thr) == charges
+    assert approx(atoms.get_dipole_moment(), abs=thr) == dipole_moment
 
     atoms.calc.set(
         accuracy=0.1,
@@ -94,7 +94,7 @@ def test_gfn2_xtb_0d():
         solvent="ch2cl2",
     )
 
-    assert approx(atoms.get_potential_energy(), thr) == -592.9940608761889
+    assert approx(atoms.get_potential_energy(), abs=thr) == -592.9940608761889
 
 
 def test_gfn1_xtb_0d():
@@ -150,10 +150,10 @@ def test_gfn1_xtb_0d():
 
     atoms.calc = XTB(method="GFN1-xTB")
 
-    assert approx(atoms.get_potential_energy(), thr) == -632.7363734598027
-    assert approx(atoms.get_forces(), thr) == forces
-    assert approx(atoms.get_charges(), thr) == charges
-    assert approx(atoms.get_dipole_moment(), thr) == dipole_moment
+    assert approx(atoms.get_potential_energy(), abs=thr) == -632.7363734598027
+    assert approx(atoms.get_forces(), abs=thr) == forces
+    assert approx(atoms.get_charges(), abs=thr) == charges
+    assert approx(atoms.get_dipole_moment(), abs=thr) == dipole_moment
 
 
 def test_gfn1_xtb_3d():
@@ -203,9 +203,9 @@ def test_gfn1_xtb_3d():
     atoms.set_calculator(calc)
     assert atoms.pbc.all()
 
-    assert approx(atoms.get_potential_energy(), thr) == -1256.768167202048
-    assert approx(atoms.get_forces(), thr) == forces
-    assert approx(atoms.get_charges(), thr) == charges
+    assert approx(atoms.get_potential_energy(), abs=thr) == -1256.768167202048
+    assert approx(atoms.get_forces(), abs=thr) == forces
+    assert approx(atoms.get_charges(), abs=thr) == charges
 
 
 def test_gfn2_xtb_3d():
@@ -240,7 +240,7 @@ def test_gfn2_xtb_3d():
 
     # make structure molecular
     atoms.set_pbc(False)
-    assert approx(atoms.get_potential_energy(), thr) == -1121.9196707084955
+    assert approx(atoms.get_potential_energy(), abs=thr) == -1121.9196707084955
 
     with raises(InputError):
         atoms.positions = np.zeros((len(atoms), 3))

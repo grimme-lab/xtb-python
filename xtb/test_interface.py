@@ -109,7 +109,7 @@ def test_molecule():
 
 def test_gfn2_xtb_0d():
     """check if the GFN2-xTB interface is working correctly."""
-    thr = 1.0e-8
+    thr = 1.0e-7
     thr2 = 1.0e-6
 
     numbers = np.array(
@@ -189,14 +189,14 @@ def test_gfn2_xtb_0d():
 
     res = calc.singlepoint()
 
-    assert approx(res.get_energy(), thr) == -42.14746312757416
-    assert approx(res.get_gradient(), thr) == gradient
-    assert approx(res.get_charges(), thr2) == charges
+    assert approx(res.get_energy(), abs=thr) == -42.14746312757416
+    assert approx(res.get_gradient(), abs=thr2) == gradient
+    assert approx(res.get_charges(), abs=thr2) == charges
 
 
 def test_gfn1_xtb_0d():
     """check if the GFN1-xTB interface is working correctly."""
-    thr = 1.0e-8
+    thr = 1.0e-7
     thr2 = 1.0e-6
 
     numbers = np.array(
@@ -291,9 +291,9 @@ def test_gfn1_xtb_0d():
     # Start calculation by restarting with result
     res = calc.singlepoint(res)
 
-    assert approx(res.get_energy(), thr) == -44.509702418208896
-    assert approx(res.get_gradient(), thr) == gradient
-    assert approx(res.get_dipole(), thr2) == dipole
+    assert approx(res.get_energy(), abs=thr) == -44.509702418208896
+    assert approx(res.get_gradient(), abs=thr2) == gradient
+    assert approx(res.get_dipole(), abs=thr2) == dipole
 
 
 def test_gfn2_xtb_3d():
@@ -347,7 +347,7 @@ def test_gfn2_xtb_3d():
 
 def test_gfn1_xtb_3d():
     """Test GFN1-xTB for periodic input"""
-    thr = 1.0e-8
+    thr = 1.0e-7
     thr2 = 1.0e-6
 
     numbers = np.array(
@@ -427,9 +427,9 @@ def test_gfn1_xtb_3d():
     # access the results
     calc.singlepoint(res)
 
-    assert approx(res.get_energy(), thr) == -31.906084801853034
-    assert approx(res.get_gradient(), thr) == gradient
-    assert approx(res.get_charges(), thr2) == charges
+    assert approx(res.get_energy(), abs=thr) == -31.906084801853034
+    assert approx(res.get_gradient(), abs=thr) == gradient
+    assert approx(res.get_charges(), abs=thr2) == charges
 
 
 def test_gfn1xtb_solvation():
@@ -485,15 +485,15 @@ def test_gfn1xtb_solvation():
 
     res = calc.singlepoint()
 
-    assert approx(res.get_energy(), thr) == -33.66717660261584
-    assert approx(res.get_dipole(), thr) == dipole
-    assert approx(res.get_gradient(), thr) == gradient
+    assert approx(res.get_energy(), abs=thr) == -33.66717660261584
+    assert approx(res.get_dipole(), abs=thr) == dipole
+    assert approx(res.get_gradient(), abs=thr) == gradient
 
     calc.set_solvent()
 
     res = calc.singlepoint(res, copy=True)
 
-    assert approx(res.get_energy(), thr) == -33.63768565903155
+    assert approx(res.get_energy(), abs=thr) == -33.63768565903155
 
 
 def test_gfn2xtb_solvation():
@@ -547,15 +547,15 @@ def test_gfn2xtb_solvation():
 
     res = calc.singlepoint()
 
-    assert approx(res.get_energy(), thr) == -25.0841508410945
+    assert approx(res.get_energy(), abs=thr) == -25.0841508410945
 
     calc.set_solvent(Solvent.ch2cl2)
 
     res = calc.singlepoint(res)
 
-    assert approx(res.get_energy(), thr) == -25.11573992702904
-    assert approx(res.get_dipole(), thr) == dipole
-    assert approx(res.get_gradient(), thr) == gradient
+    assert approx(res.get_energy(), abs=thr) == -25.11573992702904
+    assert approx(res.get_dipole(), abs=thr) == dipole
+    assert approx(res.get_gradient(), abs=thr) == gradient
 
 
 def test_gfn1xtb_orbitals():
@@ -573,50 +573,63 @@ def test_gfn1xtb_orbitals():
         -0.15792833, -0.05043755,  0.33342098,  0.45699087,
     ])
     occupations = np.array([2.0, 2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 0.0])
-    coefficients = np.array([
-        [
-            -7.96486314e-01,  1.91513472e-15, -3.81069986e-01,  1.06627860e-15,
-            -3.85581374e-01, -2.77555756e-16,  6.66133815e-16,  8.73808841e-01,
-        ],
-        [
-             8.67361738e-16,  7.06326895e-01,  2.06085149e-15,  5.99181075e-17,
-            -2.35922393e-16,  9.10524298e-02, -9.80328049e-01,  1.05471187e-15,
-        ],
-        [
-             6.66133815e-16, -2.22044605e-16,  2.27595720e-15,  1.00000000e+00,
-            -1.66533454e-16,  1.11022302e-16, -2.77555756e-17,  1.38777878e-17,
-        ],
-        [
-            -7.03752745e-02, -2.35922393e-15,  8.51677843e-01, -1.85493019e-15,
-            -1.38148603e-01,  4.02455846e-16,  7.77156117e-16,  7.23141261e-01,
-        ],
-        [
-            -1.79427083e-01,  3.32421120e-01,  1.83354106e-01, -2.70755099e-17,
-             3.63066743e-01, -3.84174939e-01,  8.29758195e-01, -7.50228671e-01,
-        ],
-        [
-            -1.38489858e-02,  4.55724612e-02,  4.79829369e-02, -2.77816056e-16,
-            -5.47923122e-01,  6.88051905e-01,  3.00554964e-01, -4.79998559e-01,
-        ],
-        [
-            -1.79427083e-01, -3.32421120e-01,  1.83354106e-01, -4.15348025e-16,
-             3.63066743e-01,  3.84174939e-01, -8.29758195e-01, -7.50228671e-01,
-        ],
-        [
-            -1.38489858e-02, -4.55724612e-02,  4.79829369e-02, -1.37843421e-16,
-            -5.47923122e-01, -6.88051905e-01, -3.00554964e-01, -4.79998559e-01,
-        ],
-    ], order='F')
 
     calc = Calculator(Param.GFN1xTB, numbers, positions)
 
     res = calc.singlepoint()
 
     assert res.get_number_of_orbitals() == 8
-    assert approx(res.get_orbital_eigenvalues(), thr) == eigenvalues
-    assert approx(res.get_orbital_occupations(), thr) == occupations
+    assert approx(res.get_orbital_eigenvalues(), abs=thr) == eigenvalues
+    assert approx(res.get_orbital_occupations(), abs=thr) == occupations
+
+
+def test_gfn2xtb_orbitals():
+    """Test orbital coefficients for a system without degenerate orbitals"""
+    thr = 1.0e-6
+
+    numbers = np.array([7, 6, 6, 7, 1, 1, 1, 1, 1, 1, 1, 1])
+    positions = np.array([
+        [ 1.29564977905513, -0.25290920475305,  2.56431729511582],
+        [-0.96996014152233,  0.50549670256050,  1.15516418827219],
+        [-0.91468278512195, -0.62528117704831, -1.51114193758061],
+        [ 1.23123794095007,  0.11828270927591, -3.08042885289515],
+        [ 1.20535391108832, -2.10460878458761,  3.05393708716811],
+        [ 1.49042362477934,  0.75515391572193,  4.17948790921212],
+        [ 1.10488653650763,  1.97453133190190, -3.54628265772418],
+        [ 2.84484320055627, -0.08607163127153, -2.06195525106275],
+        [-2.75154898001475, -0.03520463067517,  2.08717732882173],
+        [-0.96236115663776,  2.56883627236741,  1.01250854959263],
+        [-2.66115023536726, -0.12666205649124, -2.49751707017796],
+        [-0.91269171316999, -2.69156344700073, -1.35526658874193],
+    ])
+    coefficients17 = np.array([
+        -6.23542257e-02,  1.04694368e-01,  1.58485657e-01,
+         1.83104316e-01, -7.05782247e-02, -2.55264595e-01,
+         1.14873610e-01, -7.77202601e-02,  2.36091783e-01,
+         1.93087565e-01, -8.34786636e-02,  1.13285466e-01,
+         3.30533141e-02, -3.77529214e-01,  8.08999443e-02,
+         3.41942901e-01, -5.04839035e-01,  1.42553998e-02,
+         2.83101516e-01, -5.35092121e-01, -3.50715725e-01,
+         1.39252075e-01,  5.45998733e-01, -5.72505850e-02,
+    ])
+    coefficients18 = np.array([
+        -5.31639437e-02,  1.30249689e-01,  1.72599509e-01,
+         7.52424950e-02,  2.83853028e-01,  6.30744199e-02,
+        -1.59748206e-01, -1.82193248e-01, -1.15126255e-01,
+        -2.33248691e-01, -6.73553228e-03,  6.21219585e-02,
+         8.75501496e-02, -4.65395744e-01,  2.14504764e-01,
+        -1.94199501e-01, -2.69338288e-01, -3.51436996e-01,
+         3.03687890e-01,  3.92897713e-01, -8.63647836e-02,
+        -6.19103446e-01, -4.42942142e-01, -5.99557028e-02,
+    ])
+
+    calc = Calculator(Param.GFN2xTB, numbers, positions)
+
+    res = calc.singlepoint()
+
+    assert res.get_number_of_orbitals() == 24
     this_coefficients = res.get_orbital_coefficients()
-    # remember, signs of wavefunctions are tricky, better get this one right
-    for i in range(res.get_number_of_orbitals()):
-        assert approx(this_coefficients[i], thr) == +coefficients[i] \
-            or approx(this_coefficients[i], thr) == -coefficients[i]
+    assert approx(this_coefficients[16], thr) == +coefficients17 \
+        or approx(this_coefficients[16], thr) == -coefficients17
+    assert approx(this_coefficients[17], thr) == +coefficients18 \
+        or approx(this_coefficients[17], thr) == -coefficients18
