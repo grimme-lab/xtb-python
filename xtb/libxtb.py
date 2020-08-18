@@ -40,8 +40,8 @@ VERBOSITY_MUTED = 0
 
 
 def get_api_version() -> str:
-    """Return the current API version from xtb, for easy usage in C
-    the API version is provided as
+    """Return the current API version from xtb.
+    For easy usage in C the API version is provided as
 
     10000 * major + 100 * minor + patch
 
@@ -49,9 +49,9 @@ def get_api_version() -> str:
     """
     api_version = lib.xtb_getAPIVersion()
     return "{}.{}.{}".format(
-        int(api_version / 10000),
-        int(api_version % 10000 / 100),
-        int(api_version % 100),
+        api_version // 10000,
+        api_version % 10000 // 100,
+        api_version % 100,
     )
 
 
