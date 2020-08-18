@@ -1,33 +1,51 @@
 language: python
-python:
-   - 3.7
-   - 3.8
 
-os: linux
-dist: bionic
 addons:
    apt:
       packages:
          - libblas-dev
          - liblapack-dev
-         - gfortran
+         - gfortran-7
+         - gfortran-8
          - python-pip
+   homebrew:
+      packages:
+         - gcc@8
+
+matrix:
+  include:
+
+    - os: osx
+      osx_image: xcode11.5
+      language: generic
+      env: CC=gcc-8 FC=gfortran-8
+
+    - os: linux
+      dist: bionic
+      python: 3.6
+      env: CC=gcc-7 FC=gfortran-7
+
+    - os: linux
+      dist: bionic
+      python: 3.8
+      env: CC=gcc-8 FC=gfortran-8
+
 
 before_install:
    - uname -a
    - df -h
    - ulimit -a
-   - python -V
+   - python3 -V
 
 install:
    - pip3 install -U meson ninja pytest pytest-cov codecov
    - if [ -f requirements.txt ]; then pip3 install -r requirements.txt; fi
    - meson setup build --prefix=$PWD --libdir=xtb -Dla_backend=netlib
    - ninja -C build install
-   - pip install -e .
+   - pip3 install -e .
 
 script:
-   - pytest -v --cov=xtb --pyargs xtb
+   - OMP_NUM_THREADS=2,1 pytest -v --cov=xtb --pyargs xtb
 
 after_success:
    - codecov
