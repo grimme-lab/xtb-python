@@ -18,22 +18,17 @@ matrix:
     - os: osx
       osx_image: xcode11.5
       language: generic
-      env: CC=clang FC=gfortran-8 OMP=false
-
-    - os: osx
-      osx_image: xcode11.5
-      language: generic
-      env: CC=gcc-8 FC=gfortran-8 OMP=true
+      env: CC=gcc-8 FC=gfortran-8
 
     - os: linux
       dist: bionic
       python: 3.6
-      env: CC=gcc-7 FC=gfortran-7 OMP=true
+      env: CC=gcc-7 FC=gfortran-7
 
     - os: linux
       dist: bionic
       python: 3.8
-      env: CC=gcc-8 FC=gfortran-8 OMP=true
+      env: CC=gcc-8 FC=gfortran-8
 
 
 before_install:
@@ -43,9 +38,9 @@ before_install:
    - python3 -V
 
 install:
-   - pip3 install -U meson==0.53.2 ninja pytest pytest-cov codecov
+   - pip3 install -U meson ninja pytest pytest-cov codecov
    - if [ -f requirements.txt ]; then pip3 install -r requirements.txt; fi
-   - meson setup build --prefix=$PWD --libdir=xtb -Dla_backend=netlib -Dopenmp=$OMP
+   - meson setup build --prefix=$PWD --libdir=xtb -Dla_backend=netlib
    - ninja -C build install
    - pip3 install -e .
 
