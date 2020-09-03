@@ -106,6 +106,11 @@ def test_gfn1xtb_gradient():
         "model": {
             "method": "GFN1-xTB",
         },
+        "extras": {
+            "important": {
+                "config": "do not drop",
+            },
+        },
     }
     dipole_moment = np.array(
         [-1.46493585, -2.03036834,  2.08330405]
@@ -135,6 +140,7 @@ def test_gfn1xtb_gradient():
     assert approx(atomic_result.properties.return_energy, abs=thr) == -33.63768565903155
     assert approx(atomic_result.properties.scf_dipole_moment, abs=thr) == dipole_moment
     assert approx(atomic_result.return_result, abs=thr) == gradient
+    assert atomic_result.extras['important'] == atomic_input['extras']['important']
 
 
 def test_gfn2xtb_gradient():
