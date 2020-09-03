@@ -182,8 +182,6 @@ def run_qcschema(
                 ),
             )
 
-        if 'extras' not in ret_data:
-            ret_data['extras'] = {}
         ret_data['extras'].update(extras)
 
     except XTBException as ee:
