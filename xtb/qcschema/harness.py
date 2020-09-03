@@ -182,7 +182,7 @@ def run_qcschema(
                 ),
             )
 
-        ret_data.update(extras=extras)
+        ret_data['extras'].update(extras)
 
     except XTBException as ee:
         success = False
