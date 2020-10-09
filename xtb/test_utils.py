@@ -81,6 +81,10 @@ def test_methods():
     assert get_method("gfn1-xtb") == Param.GFN1xTB
     assert get_method("GFN1XTB") == Param.GFN1xTB
 
+    assert get_method("IPEA-xTB") == Param.IPEAxTB
+    assert get_method("ipea-xtb") == Param.IPEAxTB
+    assert get_method("IPEAXTB") == Param.IPEAxTB
+
     assert get_method("GFN0-xTB") == Param.GFN0xTB
     assert get_method("gfn0-xtb") == Param.GFN0xTB
     assert get_method("GFN0XTB") == Param.GFN0xTB

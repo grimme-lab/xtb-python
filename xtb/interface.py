@@ -88,14 +88,25 @@ class Param(Enum):
 
     GFNFF = auto()
     """General force field parametrized for geometry, frequency and non-covalent
-    interactions up to Z=86
+    interactions up to Z=86.
 
     ``xtb`` API support is currently experimental.
 
     Cite as:
     S. Spicher and S. Grimme,
-    Angew. Chem. Int. Ed., 2020, accepted article.
+    Angew. Chem. Int. Ed., 2020, 59, 15665–15673.
     DOI: `10.1002/anie.202004239 <https://dx.doi.org/10.1002/anie.202004239>`_
+    """
+
+    IPEAxTB = auto()
+    """Special parametrisation for the GFN1-xTB Hamiltonian to improve the
+    description of vertical ionisation potentials and electron affinities.
+    Uses additional diffuse s-functions on light main group elements.
+    Parametrised up to Z=86.
+
+    Cite as:
+    V. Asgeirsson, C. Bauer and S. Grimme, Chem. Sci., 2017, 8, 4879.
+    DOI: `10.1039/c7sc00601b <https://dx.doi.org/10.1039/c7sc00601b`_
     """
 
 
@@ -639,6 +650,7 @@ class Calculator(Molecule):
     _loader = {
         Param.GFN2xTB: _lib.xtb_loadGFN2xTB,
         Param.GFN1xTB: _lib.xtb_loadGFN1xTB,
+        Param.IPEAxTB: _lib.xtb_loadGFN1xTB,
         Param.GFN0xTB: _lib.xtb_loadGFN0xTB,
         Param.GFNFF: _lib.xtb_loadGFNFF,
     }
@@ -663,8 +675,13 @@ class Calculator(Molecule):
     def _load(self, param: Param):
         """Load parametrisation data into calculator"""
 
+        if param == Param.IPEAxTB:
+            _filename = _ffi.new("char[]", "param_ipea-xtb.txt".encode())
+        else:
+            _filename = _ffi.NULL
+
         self._loader[param](
-            self._env, self._mol, self._calc, _ffi.NULL,
+            self._env, self._mol, self._calc, _filename,
         )
 
         if self.check() != 0:
