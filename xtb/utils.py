@@ -25,6 +25,8 @@ _methods = {
     "gfn2xtb": Param.GFN2xTB,
     "gfn1-xtb": Param.GFN1xTB,
     "gfn1xtb": Param.GFN1xTB,
+    "ipea-xtb": Param.IPEAxTB,
+    "ipeaxtb": Param.IPEAxTB,
     "gfn0-xtb": Param.GFN0xTB,
     "gfn0xtb": Param.GFN0xTB,
     "gfn-ff": Param.GFNFF,
