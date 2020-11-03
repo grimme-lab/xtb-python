@@ -104,7 +104,7 @@ Now, setup the project by building the CFFI extension module from the ``xtb`` AP
 
 .. code-block:: none
 
-   meson setup build --prefix=$PWD --libdir=xtb --default-library=shared
+   meson setup build --prefix=$PWD --default-library=shared
    ninja -C build install
 
 This step will create the CFFI extension ``_libxtb`` and place it in the ``xtb`` directory.
@@ -209,7 +209,7 @@ We closely follow the approach from before, but we change the configuration of t
 
 .. code-block:: none
 
-   meson setup build --prefix=$PWD --libdir=xtb --default-library=static
+   meson setup build --prefix=$PWD --default-library=static
    ninja -C build install
 
 
