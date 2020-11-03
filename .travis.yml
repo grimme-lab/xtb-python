@@ -40,7 +40,7 @@ before_install:
 install:
    - pip3 install -U meson ninja pytest pytest-cov codecov
    - if [ -f requirements.txt ]; then pip3 install -r requirements.txt; fi
-   - meson setup build --prefix=$PWD --libdir=xtb -Dla_backend=netlib
+   - meson setup build --prefix=$PWD -Dla_backend=netlib
    - ninja -C build install
    - pip3 install -e .
 
