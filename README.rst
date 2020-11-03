@@ -79,7 +79,7 @@ configure the build of the extension with:
 
 .. code::
 
-   meson setup build --prefix=$PWD --libdir=xtb
+   meson setup build --prefix=$PWD
    ninja -C build install
 
 If you have several versions of Python installed you can point meson with
