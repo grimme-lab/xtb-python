@@ -15,10 +15,10 @@ addons:
 matrix:
   include:
 
-    - os: osx
-      osx_image: xcode11.5
-      language: generic
-      env: CC=gcc-8 FC=gfortran-8
+     #- os: osx
+     #  osx_image: xcode11.5
+     #  language: generic
+     #  env: CC=gcc-8 FC=gfortran-8
 
     - os: linux
       dist: bionic
