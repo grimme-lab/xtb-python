@@ -1,0 +1,42 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  osx-build:
+    runs-on: macos-10.15
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        pip3 install -U meson==0.55.3 ninja pytest pytest-cov codecov
+        pip3 install -r requirements.txt
+
+    - name: Setup build of extension module
+      env:
+        FC: gfortran-9
+        CC: gcc-9
+      run: meson setup build --prefix=$PWD -Dla_backend=netlib
+
+    - name: Compile extension module
+      run: ninja -C build install
+
+    - name: Install Python package
+      run: pip3 install -e .
+
+    - name: Test Python package
+      run: pytest -v --cov=xtb --pyargs xtb
+      env:
+        OMP_NUM_THREADS: 2,1
+
+    - name: Upload coverage report to codecov
+      run: codecov
