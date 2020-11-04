@@ -231,7 +231,8 @@ def test_gfn2_xtb_3d():
         pbc = np.array([True, True, True]),
     )
 
-    atoms.calc = XTB(method="GFN2-xTB")
+    calc = XTB(method="GFN2-xTB")
+    atoms.calc = calc
 
     with raises(CalculationFailed):
         atoms.get_potential_energy()
