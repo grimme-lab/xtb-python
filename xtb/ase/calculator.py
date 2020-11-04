@@ -33,7 +33,7 @@ Example
 >>> from ase.build import molecule
 >>> from xtb.ase.calculator import XTB
 >>> atoms = molecule('H2O')
->>> atoms.set_calculator(XTB(method="GFN2-xTB"))
+>>> atoms.calc = XTB(method="GFN2-xTB")
 >>> atoms.get_potential_energy()
 -137.9677758730299
 >>> atoms.get_forces()

@@ -199,8 +199,7 @@ def test_gfn1_xtb_3d():
         -0.37178059, -0.37127074,
     ])
 
-    calc = XTB(method="GFN1-xTB")
-    atoms.set_calculator(calc)
+    atoms.calc = XTB(method="GFN1-xTB")
     assert atoms.pbc.all()
 
     assert approx(atoms.get_potential_energy(), abs=thr) == -1256.768167202048
@@ -233,7 +232,7 @@ def test_gfn2_xtb_3d():
     )
 
     calc = XTB(method="GFN2-xTB")
-    atoms.set_calculator(calc)
+    atoms.calc = calc
 
     with raises(CalculationFailed):
         atoms.get_potential_energy()

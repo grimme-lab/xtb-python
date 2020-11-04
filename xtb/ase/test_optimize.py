@@ -100,8 +100,7 @@ def test_gfn2xtb_lbfgs():
         ]),
     )
 
-    calc = XTB(method="GFN2-xTB", solvent="water", accuracy=0.1)
-    atoms.set_calculator(calc)
+    atoms.calc = XTB(method="GFN2-xTB", solvent="water", accuracy=0.1)
     opt = LBFGS(atoms)
     opt.run(fmax=0.1)
 
@@ -142,8 +141,7 @@ def test_gfn2xtb_velocityverlet():
         ]),
     )
 
-    calc = XTB(method="GFN2-xTB", cache_api=False)
-    atoms.set_calculator(calc)
+    atoms.calc = XTB(method="GFN2-xTB", cache_api=False)
 
     dyn = VelocityVerlet(atoms, timestep=1.0*fs)
     dyn.run(20)
