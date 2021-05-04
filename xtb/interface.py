@@ -276,8 +276,8 @@ class Molecule(Environment):
             raise ValueError("Dimension missmatch between numbers and positions")
 
         self._natoms = len(numbers)
-        _numbers = np.array(numbers, dtype="i4")
-        _positions = np.array(positions, dtype=float)
+        _numbers = np.ascontiguousarray(numbers, dtype="i4")
+        _positions = np.ascontiguousarray(positions, dtype=float)
 
         _charge = _ref("double", charge)
         _uhf = _ref("int", uhf)
@@ -285,14 +285,14 @@ class Molecule(Environment):
         if lattice is not None:
             if lattice.size != 9:
                 raise ValueError("Invalid lattice provided")
-            _lattice = np.array(lattice, dtype="float")
+            _lattice = np.ascontiguousarray(lattice, dtype="float")
         else:
             _lattice = None
 
         if periodic is not None:
             if periodic.size != 3:
                 raise ValueError("Invalid periodicity provided")
-            _periodic = np.array(periodic, dtype="bool")
+            _periodic = np.ascontiguousarray(periodic, dtype="bool")
         else:
             _periodic = None
 
@@ -336,12 +336,12 @@ class Molecule(Environment):
 
         if 3 * len(self) != positions.size:
             raise ValueError("Dimension missmatch for positions")
-        _positions = np.array(positions, dtype="float")
+        _positions = np.ascontiguousarray(positions, dtype="float")
 
         if lattice is not None:
             if lattice.size != 9:
                 raise ValueError("Invalid lattice provided")
-            _lattice = np.array(lattice, dtype="float")
+            _lattice = np.ascontiguousarray(lattice, dtype="float")
         else:
             _lattice = None
 
@@ -724,9 +724,9 @@ class Calculator(Molecule):
                 "Dimension missmatch between atomic numbers and cartesian coordinates"
             )
 
-        _numbers = np.array(numbers, dtype="i4")
-        _charges = np.array(charges, dtype=float)
-        _positions = np.array(positions, dtype=float)
+        _numbers = np.ascontiguousarray(numbers, dtype="i4")
+        _charges = np.ascontiguousarray(charges, dtype=float)
+        _positions = np.ascontiguousarray(positions, dtype=float)
 
         _lib.xtb_setExternalCharges(
             self._env,
