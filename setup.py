@@ -17,4 +17,7 @@
 
 from setuptools import setup
 
-setup(package_data={"xtb": ["_libxtb*.so"]})
+setup(
+    cffi_modules=["ffibuilder.py:ffibuilder"],
+    package_data={"xtb": ["_libxtb*.so"]},
+)
