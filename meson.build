@@ -44,7 +44,7 @@ else
     version: '>=6.3',
     default_options: [
       'default_library=static',
-      'static=false',
+      #'static=false',
       'openmp=@0@'.format(get_option('openmp')),
       'la_backend=@0@'.format(get_option('la_backend')),
       'optimization=@0@'.format(get_option('optimization')),
