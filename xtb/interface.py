@@ -260,12 +260,12 @@ class Molecule(Environment):
 
     def __init__(
         self,
-        numbers: np.ndarray,
-        positions: np.ndarray,
+        numbers,
+        positions,
         charge: Optional[float] = None,
         uhf: Optional[int] = None,
-        lattice: Optional[np.ndarray] = None,
-        periodic: Optional[np.ndarray] = None,
+        lattice = None,
+        periodic = None,
     ):
         """Create new molecular structure data"""
         Environment.__init__(self)
