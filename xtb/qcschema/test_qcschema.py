@@ -63,7 +63,7 @@ def test_gfn2xtb_energy():
         }
     )
     dipole_moment = np.array(
-        [0.3345064021648074, -1.0700925215553294, -1.2299195418603437]
+        [0.3345115197707647, -1.0701017905608206, -1.2299212343599290]
     )
 
     atomic_result = run_qcschema(atomic_input)
