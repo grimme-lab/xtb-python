@@ -7,16 +7,13 @@ Python API for the extended tight binding program
 .. image:: https://img.shields.io/github/license/grimme-lab/xtb-python
    :alt: License
    :target: COPYING.LESSER
-.. image:: https://travis-ci.com/grimme-lab/xtb-python.svg?branch=master
-   :alt: Travis CI
-   :target: https://travis-ci.com/grimme-lab/xtb-python
 .. image:: https://readthedocs.org/projects/xtb-python/badge/?version=latest
    :alt: Documentation Status
    :target: https://xtb-python.readthedocs.io/en/latest/?badge=latest
 .. image:: https://img.shields.io/lgtm/grade/python/g/grimme-lab/xtb-python.svg
    :alt: LGTM
    :target: https://lgtm.com/projects/g/grimme-lab/xtb-python/context:python
-.. image:: https://codecov.io/gh/grimme-lab/xtb-python/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/grimme-lab/xtb-python/branch/main/graph/badge.svg
    :alt: Codecov
    :target: https://codecov.io/gh/grimme-lab/xtb-python
 
@@ -90,7 +87,7 @@ directory.
 In case meson fails to configure or build, check the options for ``-Dla_backed``
 and ``-Dopenmp`` which are passed to the ``xtb`` subproject.
 For more information on the build with meson, follow the guide in the ``xtb``
-repository `here <https://github.com/grimme-lab/xtb/blob/master/meson/README.adoc>`_.
+repository `here <https://github.com/grimme-lab/xtb/blob/HEAD/meson/README.adoc>`_.
 
 After creating the ``_libxtb`` extension, the Python module can be installed
 as usual with
