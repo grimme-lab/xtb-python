@@ -145,10 +145,9 @@ def run_qcschema(
             )
 
         # Work out how verbose the printing from xtb should be
-        if isinstance(verbosity, str):
-            verbosity = _verbosity_flags[verbosity.lower()]
+        verbosity = _verbosity_flags.get(verbosity, verbosity)
         calc.set_verbosity(verbosity)
-        if verbosity > 0:
+        if verbosity > VERBOSITY_MUTED:
             fd = NamedTemporaryFile()
             calc.set_output(fd.name)
 
@@ -206,7 +205,7 @@ def run_qcschema(
         return_result = 0.0
         properties = {}
 
-    if verbosity > 0:
+    if verbosity > VERBOSITY_MUTED:
         output = fd.read().decode()
         fd.close()
 
