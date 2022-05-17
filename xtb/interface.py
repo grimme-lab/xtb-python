@@ -17,6 +17,7 @@
 """Wrapper around the C-API of the xtb shared library."""
 
 from typing import List, Optional, Union
+from typing_extensions import Literal
 from enum import Enum, auto
 import numpy as np
 
@@ -29,7 +30,16 @@ from .libxtb import (
     new_calculator,
     new_results,
     copy_results,
+    VERBOSITY_FULL,
+    VERBOSITY_MINIMAL,
+    VERBOSITY_MUTED
 )
+
+_verbosity_flags = {
+    "full": VERBOSITY_FULL,
+    "minimal": VERBOSITY_MINIMAL,
+    "muted": VERBOSITY_MUTED
+}
 
 
 class XTBException(Exception):
@@ -216,9 +226,11 @@ class Environment:
         """Release output unit from this environment"""
         _lib.xtb_releaseOutput(self._env)
 
-    def set_verbosity(self, verbosity: int) -> None:
+    def set_verbosity(self, verbosity: Union[Literal["full", "minimal", "muted"], int]) -> int:
         """Set verbosity of calculation output"""
+        verbosity = _verbosity_flags.get(verbosity, verbosity)
         _lib.xtb_setVerbosity(self._env, verbosity)
+        return verbosity
 
 
 class Molecule(Environment):

@@ -36,7 +36,7 @@ Supported keywords are
 
 from typing import Union
 from tempfile import NamedTemporaryFile
-from ..libxtb import VERBOSITY_FULL, VERBOSITY_MINIMAL, VERBOSITY_MUTED, get_api_version
+from ..libxtb import VERBOSITY_MUTED, get_api_version
 from ..interface import Calculator, XTBException
 from ..utils import get_method, get_solvent
 import qcelemental as qcel
@@ -49,11 +49,6 @@ _keywords = [
     "solvent",
     "verbosity"
 ]
-_verbosity_flags = {
-    "full": VERBOSITY_FULL,
-    "minimal": VERBOSITY_MINIMAL,
-    "muted": VERBOSITY_MUTED
-}
 
 
 def run_qcschema(
@@ -119,7 +114,7 @@ def run_qcschema(
         return qcel.models.AtomicResult(**ret_data)
 
     verbosity = atomic_input.keywords.get("verbosity", "full")
-    verbosity = _verbosity_flags.get(verbosity, verbosity)
+    fd = None
     output = None
     success = True
     try:
@@ -146,7 +141,7 @@ def run_qcschema(
             )
 
         # Work out how verbose the printing from xtb should be
-        calc.set_verbosity(verbosity)
+        verbosity = calc.set_verbosity(verbosity)
         if verbosity > VERBOSITY_MUTED:
             fd = NamedTemporaryFile()
             calc.set_output(fd.name)
@@ -205,7 +200,7 @@ def run_qcschema(
         return_result = 0.0
         properties = {}
 
-    if verbosity > VERBOSITY_MUTED:
+    if verbosity > VERBOSITY_MUTED and fd is not None:
         output = fd.read().decode()
         fd.close()
 
