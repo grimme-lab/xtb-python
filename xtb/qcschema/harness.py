@@ -119,6 +119,7 @@ def run_qcschema(
         return qcel.models.AtomicResult(**ret_data)
 
     verbosity = atomic_input.keywords.get("verbosity", "full")
+    verbosity = _verbosity_flags.get(verbosity, verbosity)
     output = None
     success = True
     try:
@@ -145,7 +146,6 @@ def run_qcschema(
             )
 
         # Work out how verbose the printing from xtb should be
-        verbosity = _verbosity_flags.get(verbosity, verbosity)
         calc.set_verbosity(verbosity)
         if verbosity > VERBOSITY_MUTED:
             fd = NamedTemporaryFile()
