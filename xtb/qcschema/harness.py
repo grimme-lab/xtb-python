@@ -200,7 +200,7 @@ def run_qcschema(
         return_result = 0.0
         properties = {}
 
-    if verbosity > VERBOSITY_MUTED and fd is not None:
+    if fd is not None:
         output = fd.read().decode()
         fd.close()
 
