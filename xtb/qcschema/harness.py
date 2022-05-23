@@ -36,7 +36,7 @@ Supported keywords are
 
 from typing import Union
 from tempfile import NamedTemporaryFile
-from ..libxtb import VERBOSITY_FULL, get_api_version
+from ..libxtb import VERBOSITY_MUTED, get_api_version
 from ..interface import Calculator, XTBException
 from ..utils import get_method, get_solvent
 import qcelemental as qcel
@@ -47,6 +47,7 @@ _keywords = [
     "electronic_temperature",
     "max_iterations",
     "solvent",
+    "verbosity"
 ]
 
 
@@ -112,7 +113,9 @@ def run_qcschema(
 
         return qcel.models.AtomicResult(**ret_data)
 
-    fd = NamedTemporaryFile()
+    verbosity = atomic_input.keywords.get("verbosity", "full")
+    fd = None
+    output = None
     success = True
     try:
         calc = Calculator(
@@ -137,9 +140,11 @@ def run_qcschema(
                 atomic_input.keywords["electronic_temperature"]
             )
 
-        # We want the full printout from xtb
-        calc.set_verbosity(VERBOSITY_FULL)
-        calc.set_output(fd.name)
+        # Work out how verbose the printing from xtb should be
+        verbosity = calc.set_verbosity(verbosity)
+        if verbosity > VERBOSITY_MUTED:
+            fd = NamedTemporaryFile()
+            calc.set_output(fd.name)
 
         # Perform actual calculation
         res = calc.singlepoint()
@@ -195,8 +200,9 @@ def run_qcschema(
         return_result = 0.0
         properties = {}
 
-    output = fd.read().decode()
-    fd.close()
+    if fd is not None:
+        output = fd.read().decode()
+        fd.close()
 
     ret_data.update(
         provenance=provenance,

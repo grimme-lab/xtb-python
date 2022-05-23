@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
-
+import pytest
 from pytest import approx
 from xtb.qcschema.harness import run_qcschema
 import qcelemental as qcel
@@ -447,3 +447,42 @@ def test_gfn1xtb_solvation():
 
     assert atomic_result.success
     assert approx(atomic_result.return_result, abs=thr) == -24.804166790730523
+
+
+@pytest.mark.parametrize("verbosity", [
+    pytest.param("muted", id="muted flag"),
+    pytest.param(0, id="muted value")
+])
+def test_verbosity(verbosity):
+    """Make sure out put is only saved when requested."""
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule={
+            "symbols": [
+                "C", "C", "C", "C", "N", "C", "S", "H", "H", "H", "H", "H",
+            ],
+            "geometry": [
+                -2.56745685564671, -0.02509985979910, 0.00000000000000,
+                -1.39177582455797, 2.27696188880014, 0.00000000000000,
+                1.27784995624894, 2.45107479759386, 0.00000000000000,
+                2.62801937615793, 0.25927727028120, 0.00000000000000,
+                1.41097033661123, -1.99890996077412, 0.00000000000000,
+                -1.17186102298849, -2.34220576284180, 0.00000000000000,
+                -2.39505990368378, -5.22635838332362, 0.00000000000000,
+                2.41961980455457, -3.62158019253045, 0.00000000000000,
+                -2.51744374846065, 3.98181713686746, 0.00000000000000,
+                2.24269048384775, 4.24389473203647, 0.00000000000000,
+                4.66488984573956, 0.17907568006409, 0.00000000000000,
+                -4.60044244782237, -0.17794734637413, 0.00000000000000,
+            ],
+        },
+        driver="energy",
+        model={
+            "method": "GFN1-xTB",
+        },
+        keywords={"verbosity": verbosity}
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+    assert atomic_result.stdout is None  # make sure no output was saved
+    assert atomic_result.return_result is not None  # make sure the calculation was run
