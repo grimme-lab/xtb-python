@@ -3,4 +3,4 @@ directory = xtb
 
 source_url =  https://github.com/grimme-lab/xtb/archive/refs/tags/v6.4.1.tar.gz
 source_filename = xtb-6.4.1.tar.gz
-source_hash = afa7bdffd36dee5f58b6f658004a3bac3567aabc
+source_hash = 0b39f6e87ce07abcb0884cda5d3370601b6332ad72c8213e87ffa74ae28895fb
