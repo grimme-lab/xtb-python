@@ -228,7 +228,7 @@ class Environment:
 
     def set_verbosity(self, verbosity: Union[Literal["full", "minimal", "muted"], int]) -> int:
         """Set verbosity of calculation output"""
-        verbosity = _verbosity_flags.get(verbosity, verbosity)
+        verbosity = int(_verbosity_flags.get(str(verbosity), verbosity))
         _lib.xtb_setVerbosity(self._env, verbosity)
         return verbosity
 
