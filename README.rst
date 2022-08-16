@@ -64,7 +64,7 @@ with
 
 .. code::
 
-   git submodules update --init
+   git submodule update --init
 
 The project is build with meson, the exact dependencies are defined by the ``xtb``
 project, in summary it requires a Fortran and a C compiler as well as a
