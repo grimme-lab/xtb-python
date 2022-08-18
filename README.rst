@@ -38,7 +38,7 @@ For more details visit the `documentation <https://xtb-python.readthedocs.io/en/
 
 
 Conda Installation
-~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 Installing ``xtb-python`` from the ``conda-forge`` channel can be achieved by adding ``conda-forge`` to your channels with:
 
@@ -60,7 +60,7 @@ It is possible to list all of the versions of ``xtb-python`` available on your p
 
 
 Build from Source
-~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 When building this project from source, make sure to initialize the git submodules
 with
@@ -80,7 +80,7 @@ configure the build of the extension with:
 .. code::
 
    meson setup build --prefix=$PWD
-   ninja -C build install -v 
+   ninja -C build install -v
 
 By default, the build will use ``'python3'``. 
 If you have several versions of Python installed, you can point meson
