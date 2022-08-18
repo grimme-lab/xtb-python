@@ -55,7 +55,7 @@ endif
 
 pymod = import('python')
 python = pymod.find_installation(
-  'python@0@'.format(get_option('py')),
+  get_option('py'),
   modules: [
     'cffi',
   ],

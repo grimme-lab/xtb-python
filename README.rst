@@ -27,15 +27,18 @@ Installation
 ------------
 
 Depending on what you plan to do with ``xtb-python`` there are two recommended
-ways to install. If you plan to use this project in your workflows, proceed
-with the conda installation, if you plan to develop on this project, proceed
-with the build from source.
+ways to install.
+
+* If you plan to use this project in your workflows, follow the 
+  Conda Installation section.
+* If you plan to develop on this project, proceed
+  with the Build from Source section.
 
 For more details visit the `documentation <https://xtb-python.readthedocs.io/en/latest/installation.html>`_.
 
 
-With Conda
-~~~~~~~~~~
+Conda Installation
+~~~~~~~~~~~~~~~~~~
 
 Installing ``xtb-python`` from the ``conda-forge`` channel can be achieved by adding ``conda-forge`` to your channels with:
 
@@ -56,8 +59,8 @@ It is possible to list all of the versions of ``xtb-python`` available on your p
    conda search xtb-python --channel conda-forge
 
 
-From Source
-~~~~~~~~~~~
+Build from Source
+~~~~~~~~~~~~~~~~~
 
 When building this project from source, make sure to initialize the git submodules
 with
@@ -66,25 +69,26 @@ with
 
    git submodule update --init
 
-The project is build with meson, the exact dependencies are defined by the ``xtb``
-project, in summary it requires a Fortran and a C compiler as well as a
+The project is built with meson; the exact dependencies are defined by the ``xtb``
+project. In summary it requires a Fortran and a C compiler as well as a
 linear algebra backend. Make yourself familiar with building ``xtb`` first!
 
-Additionally this project requires a development version of Python installed.
-Also ensure that you have the ``numpy`` and ``cffi`` packages installed,
+This project requires a development version of Python installed.
+Also, ensure that you have the ``numpy`` and ``cffi`` packages installed,
 configure the build of the extension with:
 
 .. code::
 
    meson setup build --prefix=$PWD
-   ninja -C build install
+   ninja -C build install -v
 
-If you have several versions of Python installed you can point meson with
-the ``-Dpy=<version>`` option to the correct one.
+By default, the build will use ``'python3'``. 
+If you have several versions of Python installed, you can point meson
+to the correct one using the ``-Dpy=<version>`` option. 
 This will create the CFFI extension ``_libxtb`` and place it in the ``xtb``
 directory.
 
-In case meson fails to configure or build, check the options for ``-Dla_backed``
+In case meson fails to configure or build, check the options for ``-Dla_backend``
 and ``-Dopenmp`` which are passed to the ``xtb`` subproject.
 For more information on the build with meson, follow the guide in the ``xtb``
 repository `here <https://github.com/grimme-lab/xtb/blob/HEAD/meson/README.adoc>`_.
@@ -100,7 +104,7 @@ as usual with
 Contributing
 ------------
 
-Contributions to this open source project are very welcome, before starting
+Contributions to this open source project are very welcome. Before starting,
 review our `contributing guidelines <CONTRIBUTING.rst>`_ first, please.
 
 
