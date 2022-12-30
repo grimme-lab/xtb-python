@@ -1,0 +1,4 @@
+cffi
+numpy
+ase
+qcelemental
