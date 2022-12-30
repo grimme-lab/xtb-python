@@ -1,0 +1,6 @@
+[wrap-file]
+directory = xtb-6.5.1
+
+source_url =  https://github.com/grimme-lab/xtb/releases/download/v6.5.1/xtb-6.5.1-source.tar.xz
+source_filename = xtb-6.5.1-source.tar.xz
+source_hash = 0922205cc224fe79e28f3d75be4e10c03efa8f3f666aedec8346fed82b272cad

@@ -68,9 +68,6 @@ To install ``xtb-python`` from source clone the repository from GitHub with
 
    git clone https://github.com/grimme-lab/xtb-python
    cd xtb-python
-   git submodule update --init
-
-This will ensure that you have access to the ``xtb-python`` and the parent ``xtb`` repository, with the latter to be found in ``subprojects/xtb``.
 
 
 Building the Extension Module
@@ -104,10 +101,8 @@ Now, setup the project by building the CFFI extension module from the ``xtb`` AP
 
 .. code-block:: none
 
-   meson setup build --prefix=$PWD --default-library=shared
+   meson setup build --prefix=$HOME/.local
    ninja -C build install
-
-This step will create the CFFI extension ``_libxtb`` and place it in the ``xtb`` directory.
 
 
 Meson cannot find xtb dependency
@@ -137,44 +132,6 @@ For the official release tarball you possible have to edit the first line of ``x
    Installs from conda-forge should work out-of-box.
 
 
-Dealing with Several Versions of Python
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you have several versions of Python installed you can point meson with the ``-Dpy=<version>`` option to the correct one.
-Depending on your setup you have to export your compilers (``CC`` and ``FC``) first and set the ``-Dla_backend=<name>`` and ``-Dopenmp=<bool>`` option accordingly.
-
-
-.. _devel-install:
-
-Installing in Development Mode
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-After creating the ``_libxtb`` extension, the Python module can be installed as usual with
-
-.. code-block:: none
-
-   pip install -e .
-
-Now you are set to start using ``xtb-python``.
-You can test your setup by opening a new Python interpreter and try to import the interface module
-
-.. code::
-
-   >>> import xtb.interface
-
-If you also want to use extensions install with
-
-.. code-block:: none
-
-   pip install -e '.[ase,qcschema]'
-
-Now you can test your installation with
-
-.. code-block:: none
-
-   pytest --pyargs xtb
-
-
 Helpful Tools
 ^^^^^^^^^^^^^
 
@@ -183,44 +140,3 @@ We aim for a high quality code base and encourage substainable development model
 Please, install a linter like ``flake8`` or ``pylint`` to catch errors before they become bugs.
 Also, typehints are mandatory in this project, you should typecheck locally with ``mypy``.
 A consistent coding style is enforced by using ``black``, every source file should be reformatted using ``black``, the only exceptions are tests.
-
-
-Building without Upstream Dependency
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-For convenience we also offer a mode to work without an upstream ``xtb`` dependency, this can be quite handy if you also want to work on the ``xtb`` API itself or want to create a failsafe package that cannot break due to ABI or API incompatibilities.
-
-.. note::
-
-   It is highly recommend to make yourself familiar with building ``xtb`` first.
-
-For this approach we follow the same scheme as with the normal extension build.
-You will need the following packages installed
-
-.. code-block:: none
-
-   cffi
-   numpy
-   meson  # build only
-
-Additionally you will need a development version of Python, for the Python headers, a Fortran and a C compiler (GCC 7 or newer or Intel 17 or newer) and a linear algebra backend (providing LAPACK and BLAS API).
-
-We closely follow the approach from before, but we change the configuration of the extension build to
-
-.. code-block:: none
-
-   meson setup build --prefix=$PWD --default-library=static
-   ninja -C build install
-
-
-Depending on how you acquired the project mesons wrap-tool will first need to download the ``xtb`` source code.
-Instead of dynamically depending on ``xtb`` the complete project will be build and included as a whole into the CFFI extension module, making your ``xtb-python`` effectively independent of ``xtb``.
-
-You can pass the ``-Dopenmp=<bool>`` and ``-Dla_backend=<netlib|openblas|mkl>`` in the configuration step to configure the ``xtb`` build.
-To change the compiler used export them in the environment variables ``CC`` and ``FC``.
-
-.. tip::
-
-   For more information on the build with meson, follow the guide in the ``xtb`` repository `here <https://github.com/grimme-lab/xtb/blob/master/meson/README.adoc>`_.
-
-From here you can proceed with :ref:`devel-install`.

@@ -20,42 +20,29 @@ project(
   'c',
   license: 'LGPL-3.0-or-later',
   default_options: [
-    'libdir=xtb',
     'default_library=static',
-    'optimization=2',
+    'buildtype=debugoptimized',
   ]
 )
+install = true
+
+xtb_dep = dependency(
+  'xtb',
+  version: '>=@0@'.format(meson.project_version()),
+  fallback: ['xtb-6.5.1', 'xtb_dep'],
+  default_options: [
+    'default_library=static',
+    'c_api=true',
+  ],
+)
+# TODO: replace with include/_xtb.h containing only ``#include "xtb.h"``
+xtb_header = files('include' / 'xtb.h')
 
 cc = meson.get_compiler('c')
 
-# In case you actually want to depend on the xtb shared library
-if get_option('default_library') == 'shared'
-  xtb_dep = declare_dependency(
-    include_directories: include_directories('include'),
-    dependencies: dependency('xtb', version: '>=6.3', required: true),
-  )
-  xtb_header = files('include/xtb.h')
-else
-# Import xtb as subproject, we need the API of version 6.3 or newer,
-# in this mode we want to dependency free regarding xtb, therefore,
-# we force xtb to provide a _static_ library to avoid depending on xtb at runtime
-  xtb_prj = subproject(
-    'xtb',
-    version: '>=6.3',
-    default_options: [
-      'default_library=static',
-      'openmp=@0@'.format(get_option('openmp')),
-      'la_backend=@0@'.format(get_option('la_backend')),
-      'optimization=@0@'.format(get_option('optimization')),
-    ],
-  )
-  xtb_dep = xtb_prj.get_variable('xtb_dep')
-  xtb_header = xtb_prj.get_variable('xtb_header')
-endif
-
 pymod = import('python')
 python = pymod.find_installation(
-  get_option('py'),
+  get_option('python_version'),
   modules: [
     'cffi',
   ],
@@ -65,7 +52,21 @@ python_dep = python.dependency(required: true)
 # Python's CFFI is horrible in working with preprocessor statements,
 # therefore, we have to preprocess the header before passing it to the ffibuilder
 xtb_pp = configure_file(
-  command: [cc, '-E', '@INPUT@'],
+  command: [
+    cc,
+    '-I@0@'.format(
+      meson.current_source_dir() / 'include',
+      # TODO: support in upstream xtb
+      # xtb_dep.get_variable(
+      #   pkgconfig: 'includedir',
+      #   cmake: 'tblite_INCLUDE_DIRS',
+      #   internal: 'includedir',
+      # ).split().get(0)
+    ),
+    '-DXTB_CFFI',
+    '-E',
+    '@INPUT@',
+  ],
   input: xtb_header,
   output: '_libxtb.h',
   capture: true,
@@ -88,5 +89,40 @@ xtb_pyext = python.extension_module(
     dependencies: [xtb_dep, python_dep],
   ),
   dependencies: [xtb_dep, python_dep],
-  install: true,
+  install: install,
+  subdir: 'xtb',
 )
+
+if install
+  python.install_sources(
+    files(
+      'xtb' / '__init__.py',
+      'xtb' / 'interface.py',
+      'xtb' / 'libxtb.py',
+      'xtb' / 'utils.py',
+      'xtb' / 'test_interface.py',
+      'xtb' / 'test_libxtb.py',
+      'xtb' / 'test_utils.py',
+    ),
+    subdir: 'xtb',
+  )
+
+  python.install_sources(
+    files(
+      'xtb' / 'ase' / '__init__.py',
+      'xtb' / 'ase' / 'calculator.py',
+      'xtb' / 'ase' / 'test_calculator.py',
+      'xtb' / 'ase' / 'test_optimize.py',
+    ),
+    subdir: 'xtb' / 'ase',
+  )
+
+  python.install_sources(
+    files(
+      'xtb' / 'qcschema' / '__init__.py',
+      'xtb' / 'qcschema' / 'harness.py',
+      'xtb' / 'qcschema' / 'test_qcschema.py',
+    ),
+    subdir: 'xtb' / 'qcschema',
+  )
+endif
