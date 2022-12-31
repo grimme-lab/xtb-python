@@ -3,44 +3,64 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  sdist:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Python
+      uses: mamba-org/provision-with-micromamba@main
+      with:
+        environment-file: environment.yml
+        extra-specs: |
+          meson-python
+          python-build
+    - run: |
+        python -m build . --sdist --outdir . -n ${{ env.SETUP_ARGS }}
+      env:
+        SETUP_ARGS: >-
+          -Csetup-args=-Dxtb-6.5.1:la_backend=netlib
+          -Csetup-args=-Dmctc-lib:json=disabled
+    - uses: actions/upload-artifact@v3
+      with:
+        name: xtb-python-sdist
+        path: ./*.tar.gz
+        retention-days: 5
+
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        python: ['3.7', '3.8', '3.9', '3.10', '3.11']
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
+    - uses: actions/checkout@v3
 
-    - name: Python 3.8
-      uses: actions/setup-python@v2
+    - name: Setup Python
+      uses: mamba-org/provision-with-micromamba@main
       with:
-        python-version: 3.8
-
-    - name: Install dependencies
-      run: |
-        pip3 install -U meson==0.55.3 ninja pytest pytest-cov codecov
-        pip3 install -r requirements.txt
+        environment-file: environment.yml
+        extra-specs: |
+          c-compiler
+          fortran-compiler
+          meson-python
+          python=${{ matrix.python }}
+          pytest
 
     - name: Setup build of extension module
+      run: |
+        pip3 install . ${{ env.SETUP_ARGS }}
       env:
-        FC: gfortran-9
-        CC: gcc-9
-      run: meson setup build --prefix=$PWD -Dla_backend=netlib
-
-    - name: Compile extension module
-      run: ninja -C build install
-
-    - name: Install Python package
-      run: pip3 install -e .
+        SETUP_ARGS: >-
+          --config-settings setup-args=-Dxtb-6.5.1:la_backend=netlib
 
     - name: Test Python package
-      run: pytest -v --cov=xtb --pyargs xtb
+      run: pytest -v --pyargs xtb
       env:
         OMP_NUM_THREADS: 2,1
-
-    - name: Upload coverage report to codecov
-      run: codecov

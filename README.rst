@@ -62,43 +62,21 @@ It is possible to list all of the versions of ``xtb-python`` available on your p
 Build from Source
 ~~~~~~~~~~~~~~~~~
 
-When building this project from source, make sure to initialize the git submodules
-with
-
-.. code::
-
-   git submodule update --init
-
-The project is built with meson; the exact dependencies are defined by the ``xtb``
-project. In summary it requires a Fortran and a C compiler as well as a
+The project is build with meson, the exact dependencies are defined by the ``xtb``
+project, in summary it requires a Fortran and a C compiler as well as a
 linear algebra backend. Make yourself familiar with building ``xtb`` first!
 
-This project requires a development version of Python installed.
-Also, ensure that you have the ``numpy`` and ``cffi`` packages installed,
-configure the build of the extension with:
+Additionally this project requires a development version of Python installed.
+Also ensure that you have the ``numpy`` and ``cffi`` packages installed,
+configure the build of the extension with.
+
+All steps to build the project are automated using
 
 .. code::
 
-   meson setup build --prefix=$PWD
-   ninja -C build install -v
+   pip install .
 
-By default, the build will use ``'python3'``. 
-If you have several versions of Python installed, you can point meson
-to the correct one using the ``-Dpy=<version>`` option. 
-This will create the CFFI extension ``_libxtb`` and place it in the ``xtb``
-directory.
-
-In case meson fails to configure or build, check the options for ``-Dla_backend``
-and ``-Dopenmp`` which are passed to the ``xtb`` subproject.
-For more information on the build with meson, follow the guide in the ``xtb``
-repository `here <https://github.com/grimme-lab/xtb/blob/HEAD/meson/README.adoc>`_.
-
-After creating the ``_libxtb`` extension, the Python module can be installed
-as usual with
-
-.. code::
-
-   pip install -e .
+To pass options to the meson build of xtb use ``--config-setting setup-args="-Dxtb-6.5.1:la_backend=openblas"`` to set for example the linear algebra backend to OpenBLAS.
 
 
 Contributing

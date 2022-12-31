@@ -1,0 +1,38 @@
+[build-system]
+requires = ["meson-python", "cffi"]
+build-backend = "mesonpy"
+
+[project]
+name = "xtb"
+version = "22.1"
+description = "Python API for the extended tight-binding program"
+readme = "README.rst"
+license.text = "LGPL-3.0-or-later"
+urls.repository = "https://github.com/grimme-lab/xtb-python"
+urls.documentation = "https://xtb-python.readthedocs.io"
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Fortran",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Chemistry",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+requires-python = ">=3.7"
+dependencies = [
+   "cffi",
+   "numpy",
+]
+optional-dependencies.ase = ["ase"]
+optional-dependencies.qcschema = ["qcelemental"]
+optional-dependencies.test = [
+  "pytest",
+  "pytest-cov",
+  "ase",
+  "qcelemental",
+]
