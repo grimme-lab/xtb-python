@@ -16,8 +16,11 @@ Python API for the extended tight binding program
 .. image:: https://codecov.io/gh/grimme-lab/xtb-python/branch/main/graph/badge.svg
    :alt: Codecov
    :target: https://codecov.io/gh/grimme-lab/xtb-python
+   
 
 This repository hosts the Python API for the extended tight binding (``xtb``) program.
+
+ **Warning** :warning: : ``xtb-python`` is no longer in active development. We recommend using `tblite <https://github.com/tblite/tblite>`_ instead.
 
 The idea of this project is to provide the ``xtb`` API for Python *without*
 requiring an additional ``xtb`` installation.
