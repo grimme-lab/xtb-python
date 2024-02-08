@@ -47,6 +47,8 @@ Supported keywords are
  Keyword                  Default      Description
 ======================== ============ ============================================
  method                   "GFN2-xTB"   Underlying method for energy and forces
+ charge                   None         Total charge of the system
+ multiplicity             None         Total multiplicity of the system
  accuracy                 1.0          Numerical accuracy of the calculation
  electronic_temperature   300.0        Electronic temperatur for TB methods
  max_iterations           250          Iterations for self-consistent evaluation
@@ -132,6 +134,22 @@ class XTB(ase_calc.Calculator):
 
         return changed_parameters
 
+    @property
+    def _charge(self) -> int:
+        return (
+            self.atoms.get_initial_charges().sum()
+            if self.parameters.charge is None
+            else self.parameters.charge
+        )
+
+    @property
+    def _uhf(self) -> int:
+        return (
+            int(self.atoms.get_initial_magnetic_moments().sum().round())
+            if self.parameters.multiplicity is None
+            else self.parameters.multiplicity - 1
+        )
+
     def _check_parameters(self, parameters: dict) -> None:
         """Verifiy provided parameters are valid"""
 
@@ -187,8 +205,8 @@ class XTB(ase_calc.Calculator):
         try:
             _cell = self.atoms.cell
             _periodic = self.atoms.pbc
-            _charge = self.atoms.get_initial_charges().sum()
-            _uhf = int(self.atoms.get_initial_magnetic_moments().sum().round())
+            _charge = self._charge
+            _uhf = self._uhf
 
             calc = Calculator(
                 _method,
