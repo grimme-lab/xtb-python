@@ -46,6 +46,7 @@ python = pymod.find_installation(
   modules: [
     'cffi',
   ],
+  pure: false,
 )
 python_dep = python.dependency(required: true)
 
