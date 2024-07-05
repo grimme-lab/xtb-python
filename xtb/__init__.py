@@ -16,8 +16,7 @@
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
 """Python API of the extended tight binding program package"""
 
-# make sure we have a CFFI available
-import cffi
+from importlib import metadata
 
-__version__ = "20.2"
+__version__ = metadata.version(__name__)
 API_VERSION = "1.0.0"
