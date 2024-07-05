@@ -27,6 +27,7 @@ requires-python = ">=3.7"
 dependencies = [
    "cffi",
    "numpy",
+   "typing_extensions",
 ]
 optional-dependencies.ase = ["ase"]
 optional-dependencies.qcschema = ["qcelemental"]
