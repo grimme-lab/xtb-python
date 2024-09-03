@@ -99,7 +99,7 @@ jobs:
         wheel
         xtb
     - name: Download sdist
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4.1.7
       with:
         name: xtb-python-sdist
     - name: Build wheel
@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           path: ${{ github.workspace }}  # This will download all files
 
