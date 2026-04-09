@@ -14,8 +14,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
-
-try:
-    import ase
-except ModuleNotFoundError:
-    raise ModuleNotFoundError("This submodule requires ASE installed")

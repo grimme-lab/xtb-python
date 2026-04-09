@@ -14,18 +14,30 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+from typing import Any, Dict, Optional
+
+import numpy as np
 import pytest
 from pytest import approx
-from xtb.qcschema.harness import run_qcschema
-import qcelemental as qcel
-import numpy as np
 
-def test_gfn2xtb_energy():
-    """Use QCSchema to calculate the energy of a halogen bond compound"""
-    thr = 1.0e-7
+try:
+    from xtb.qcschema.harness import run_qcschema, qcel_v1, qcel_v2
+except ModuleNotFoundError:
+    qcel_v1 = None
+    qcel_v2 = None
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule = {
+
+v1_available = pytest.mark.skipif(
+    qcel_v1 is None, reason="QCSchema v1 not available for py314+"
+)
+v2_available = pytest.mark.skipif(
+    qcel_v2 is None, reason="QCSchema v2 not available in current QCElemental"
+)
+
+
+def get_molecule(name: str) -> Dict[str, Any]:
+    if name == "halogen_bond":
+        return {
             "symbols": [
                 "C", "C", "C", "C", "C", "C", "I", "H", "H",
                 "H", "H", "H", "S", "H", "C", "H", "H", "H",
@@ -50,35 +62,10 @@ def test_gfn2xtb_energy():
                 -5.07177399637298, 10.99164969235585, -2.10739192258756,
                 -6.35955320518616, 14.08073002965080, -1.68204314084441,
             ],
-        },
-        driver = "energy",
-        model = {
-            "method": "GFN2-xTB",
-        },
-        keywords = {
-            "accuracy": 1.0,
-            "electronic_temperature": 300.0,
-            "max_iterations": 50,
-            "solvent": "none",
         }
-    )
-    dipole_moment = np.array(
-        [0.3345115197707647, -1.0701017905608206, -1.2299212343599290]
-    )
 
-    atomic_result = run_qcschema(atomic_input)
-
-    assert atomic_result.success
-    assert approx(atomic_result.return_result, abs=thr) == -26.60185037124828
-    assert approx(atomic_result.properties.scf_dipole_moment, abs=thr) == dipole_moment
-
-
-def test_gfn1xtb_gradient():
-    """Use QCSchema to perform a GFN1-xTB calculation on a mindless molecule"""
-    thr = 1.0e-7
-
-    atomic_input = {
-        "molecule": {
+    if name == "mindless_gfn1":
+        return {
             "symbols": [
                 "H", "H", "C", "B", "H", "P", "O", "Cl",
                 "Al", "P", "B", "H", "F", "P", "H", "P",
@@ -101,54 +88,10 @@ def test_gfn1xtb_gradient():
                 -4.13181080289514, -2.34226739863660, -3.44356159392859,
                  2.85007173009739, -2.64884892757600,  0.71010806424206,
             ],
-        },
-        "driver": "gradient",
-        "model": {
-            "method": "GFN1-xTB",
-        },
-        "extras": {
-            "important": {
-                "config": "do not drop",
-            },
-        },
-    }
-    dipole_moment = np.array(
-        [-1.46493585, -2.03036834,  2.08330405]
-    )
-    gradient = np.array([
-        [ 0.009232625741587227,  0.003155461859519221,  0.002442986999241168],
-        [-0.011856864082491841, -0.001160759424710484, -0.001479499047578632],
-        [ 0.003451262987231787,  0.000215308710760728,  0.003730567708416359],
-        [ 0.003799388943258326, -0.004765860859119094,  0.007885211727762723],
-        [-0.000379213106866044, -0.002675726930398858,  0.001107252098240491],
-        [-0.007936554347068041,  0.005513289713065560, -0.010832254028311825],
-        [ 0.006084605665938956,  0.013967585988624595, -0.009310025918892868],
-        [-0.003220049379416426, -0.003946107654179984, -0.003740489224738476],
-        [ 0.006756157759172355,  0.000984515116819424,  0.007424736434524648],
-        [-0.030710275643265804, -0.004788736649680724,  0.009562034140682116],
-        [ 0.008109832723283130,  0.003419009494804033,  0.001692916089380574],
-        [ 0.005703460535291335, -0.009863992151429374,  0.001725512568523476],
-        [ 0.011742825276516265, -0.002780169889933200, -0.001075047642530233],
-        [-0.007336820690528053, -0.002159490005562796, -0.004872570579801525],
-        [-0.000541853527432064,  0.000671321722173119, -0.003239422092578492],
-        [ 0.007101471144788836,  0.004214350959247828, -0.001021909232339549],
-    ])
+        }
 
-    atomic_result = run_qcschema(qcel.models.AtomicInput(**atomic_input))
-
-    assert atomic_result.success
-    assert approx(atomic_result.properties.return_energy, abs=thr) == -33.63768565903155
-    assert approx(atomic_result.properties.scf_dipole_moment, abs=thr) == dipole_moment
-    assert approx(atomic_result.return_result, abs=thr) == gradient
-    assert atomic_result.extras['important'] == atomic_input['extras']['important']
-
-
-def test_gfn2xtb_gradient():
-    """Use QCSchema to perform a GFN2-xTB calculation on a mindless molecule"""
-    thr = 1.0e-7
-
-    atomic_input = {
-        "molecule": {
+    if name == "mindless_gfn2":
+        return {
             "symbols": [
                 "H", "F", "P", "Al", "H", "H", "Al", "B",
                 "Li", "P", "O", "H", "H", "B", "S", "H",
@@ -171,12 +114,257 @@ def test_gfn2xtb_gradient():
                 -1.59355304432499,  3.69176153150419,  2.87878226787916,
                  4.34858700256050,  2.39171478113440, -2.61802993563738,
             ],
+        }
+
+    if name == "cns_hessian":
+        return {
+            "symbols": [
+                "C", "C", "C", "C", "N", "C", "S", "H", "H", "H", "H", "H",
+            ],
+            "geometry": [
+                -2.56745685564671, -0.02509985979910,  0.00000000000000,
+                -1.39177582455797,  2.27696188880014,  0.00000000000000,
+                 1.27784995624894,  2.45107479759386,  0.00000000000000,
+                 2.62801937615793,  0.25927727028120,  0.00000000000000,
+                 1.41097033661123, -1.99890996077412,  0.00000000000000,
+                -1.17186102298849, -2.34220576284180,  0.00000000000000,
+                -2.39505990368378, -5.22635838332362,  0.00000000000000,
+                 2.41961980455457, -3.62158019253045,  0.00000000000000,
+                -2.51744374846065,  3.98181713686746,  0.00000000000000,
+                 2.24269048384775,  4.24389473203647,  0.00000000000000,
+                 4.66488984573956,  0.17907568006409,  0.00000000000000,
+                -4.60044244782237, -0.17794734637413,  0.00000000000000,
+            ],
+        }
+
+    if name == "li4c4h12":
+        return {
+            "symbols": [
+                "Li", "Li", "Li", "Li", "C", "C", "C", "C",
+                "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H",
+            ],
+            "geometry": [
+                 1.58746019997201, -1.58746019997201,  1.58746019997201,
+                -1.58746019997201,  1.58746019997201,  1.58746019997201,
+                -1.58746019997201, -1.58746019997201, -1.58746019997201,
+                 1.58746019997201,  1.58746019997201, -1.58746019997201,
+                -2.38500089414639, -2.38500089414639,  2.38500089414639,
+                 2.38500089414639, -2.38500089414639, -2.38500089414639,
+                -2.38500089414639,  2.38500089414639, -2.38500089414639,
+                 2.38500089414639,  2.38500089414639,  2.38500089414639,
+                -4.43487372589517, -2.13523102374668,  2.13523102374668,
+                -2.13523102374668, -4.43487372589517,  2.13523102374668,
+                -2.13523102374668, -2.13523102374668,  4.43487372589517,
+                 2.13523102374668,  4.43487372589517,  2.13523102374668,
+                 2.13523102374668,  2.13523102374668,  4.43487372589517,
+                 4.43487372589517,  2.13523102374668,  2.13523102374668,
+                 2.13523102374668, -2.13523102374668, -4.43487372589517,
+                 4.43487372589517, -2.13523102374668, -2.13523102374668,
+                 2.13523102374668, -4.43487372589517, -2.13523102374668,
+                -2.13523102374668,  2.13523102374668, -4.43487372589517,
+                -4.43487372589517,  2.13523102374668, -2.13523102374668,
+                -2.13523102374668,  4.43487372589517, -2.13523102374668,
+            ],
+        }
+
+    if name == "cold_fusion":
+        return {
+            "symbols": [
+                "Li", "Li", "Li", "Li",
+            ],
+            "geometry": [
+                -1.58746019997201,  1.58746019997201,  1.58746019997201,
+                -1.58746019997201,  1.58746019997201,  1.58746019997201,
+                -1.58746019997201, -1.58746019997201, -1.58746019997201,
+                 1.58746019997201,  1.58746019997201, -1.58746019997201,
+            ],
+            "validated": True,
+        }
+
+    if name == "cation":
+        return {
+            "symbols": [
+                "C", "N", "C", "N", "C", "C", "C", "H",
+                "H", "H", "H", "H", "H", "H", "H", "H",
+            ],
+            "geometry": [
+                 0.048282499,     0.057183108,     0.173514640,
+                 0.048282499,     0.057183108,     2.785682877,
+                 2.460933466,     0.057183108,     3.599550067,
+                 3.991384751,    -0.221116838,     1.583647072,
+                 2.540755491,    -0.118599203,    -0.586344180,
+                -2.061048549,     0.828021237,     4.403571784,
+                 6.721736451,     0.210496578,     1.725659980,
+                 3.058786077,     0.070940314,     5.557211706,
+                 3.368228708,    -0.207680886,    -2.461916123,
+                -1.684652926,     0.148551360,    -0.921487085,
+                -3.836824062,     0.378984547,     3.432611673,
+                -1.962159188,    -0.217412975,     6.192197434,
+                -1.859660450,     2.870361499,     4.747464119,
+                 7.499472079,    -0.877758825,     3.310818833,
+                 7.584906591,    -0.429156772,    -0.047375431,
+                 7.008294500,     2.247696785,     2.037956097,
+            ],
+            "molecular_charge": +1,
+        }
+
+    if name == "anion":
+        return {
+            "symbols": [
+                "O", "C", "C", "F", "O", "F", "H",
+            ],
+            "geometry": [
+                 4.877023733,    -3.909030492,     1.796260143,
+                 6.112318716,    -2.778558610,     0.091330457,
+                 7.360520527,    -4.445334728,    -1.932830640,
+                 7.978801077,    -6.767751279,    -1.031771494,
+                 6.374499300,    -0.460299457,    -0.213142194,
+                 5.637581753,    -4.819746139,    -3.831249370,
+                 9.040657008,    -3.585225944,    -2.750722946,
+            ],
+            "molecular_charge": -1,
+        }
+
+    raise ValueError(f"Unknown molecule name: {name}")
+
+
+def get_atomic_input(
+    version: int,
+    molecule: Dict[str, Any],
+    driver: str,
+    method: str,
+    keywords: Optional[Dict[str, Any]] = None,
+    extras: Optional[Dict[str, Any]] = None,
+    qcel_object: bool = False,
+):
+    keywords = {} if keywords is None else keywords
+    extras = {} if extras is None else extras
+
+    if version == 1:
+        input_data = {
+            "molecule": molecule,
+            "driver": driver,
+            "model": {
+                "method": method,
+            },
+            "keywords": keywords,
+            "extras": extras,
+        }
+        if qcel_object:
+            return qcel_v1.AtomicInput(**input_data)
+        return input_data
+
+    if version == 2:
+        input_data = {
+            "molecule": molecule,
+            "specification": {
+                "driver": driver,
+                "model": {
+                    "method": method,
+                },
+                "keywords": keywords,
+                "extras": extras,
+            },
+        }
+        if qcel_object:
+            return qcel_v2.AtomicInput(**input_data)
+        return input_data
+
+    raise ValueError(f"Unsupported version: {version}")
+
+
+@pytest.fixture(params=[pytest.param(1, marks=v1_available), pytest.param(2, marks=v2_available)])
+def qcsk_version(request):
+    return request.param
+
+
+def test_gfn2xtb_energy(qcsk_version: int):
+    """Use QCSchema to calculate the energy of a halogen bond compound"""
+    thr = 1.0e-7
+
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("halogen_bond"),
+        driver="energy",
+        method="GFN2-xTB",
+        keywords={
+            "accuracy": 1.0,
+            "electronic_temperature": 300.0,
+            "max_iterations": 50,
+            "solvent": "none",
         },
-        "driver": "gradient",
-        "model": {
-            "method": "GFN2-xTB",
+        qcel_object=True,
+    )
+    dipole_moment = np.array(
+        [0.3345115197707647, -1.0701017905608206, -1.2299212343599290]
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert atomic_result.success
+    assert approx(atomic_result.return_result, abs=thr) == -26.60185037124828
+    assert approx(atomic_result.properties.scf_dipole_moment, abs=thr) == dipole_moment
+
+
+def test_gfn1xtb_gradient(qcsk_version: int):
+    """Use QCSchema to perform a GFN1-xTB calculation on a mindless molecule"""
+    thr = 1.0e-7
+
+    entry = {"config": "do not drop"}
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("mindless_gfn1"),
+        driver="gradient",
+        method="GFN1-xTB",
+        extras={
+            "important": entry
         },
-    }
+        qcel_object=True,
+    )
+    dipole_moment = np.array(
+        [-1.46493585, -2.03036834,  2.08330405]
+    )
+    gradient = np.array([
+        [ 0.009232625741587227,  0.003155461859519221,  0.002442986999241168],
+        [-0.011856864082491841, -0.001160759424710484, -0.001479499047578632],
+        [ 0.003451262987231787,  0.000215308710760728,  0.003730567708416359],
+        [ 0.003799388943258326, -0.004765860859119094,  0.007885211727762723],
+        [-0.000379213106866044, -0.002675726930398858,  0.001107252098240491],
+        [-0.007936554347068041,  0.005513289713065560, -0.010832254028311825],
+        [ 0.006084605665938956,  0.013967585988624595, -0.009310025918892868],
+        [-0.003220049379416426, -0.003946107654179984, -0.003740489224738476],
+        [ 0.006756157759172355,  0.000984515116819424,  0.007424736434524648],
+        [-0.030710275643265804, -0.004788736649680724,  0.009562034140682116],
+        [ 0.008109832723283130,  0.003419009494804033,  0.001692916089380574],
+        [ 0.005703460535291335, -0.009863992151429374,  0.001725512568523476],
+        [ 0.011742825276516265, -0.002780169889933200, -0.001075047642530233],
+        [-0.007336820690528053, -0.002159490005562796, -0.004872570579801525],
+        [-0.000541853527432064,  0.000671321722173119, -0.003239422092578492],
+        [ 0.007101471144788836,  0.004214350959247828, -0.001021909232339549],
+    ])
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert atomic_result.success
+    assert approx(atomic_result.properties.return_energy, abs=thr) == -33.63768565903155
+    assert approx(atomic_result.properties.scf_dipole_moment, abs=thr) == dipole_moment
+    assert approx(atomic_result.return_result, abs=thr) == gradient
+    if qcsk_version == 1:
+        assert atomic_result.extras["important"] == entry
+    elif qcsk_version == 2:
+        assert atomic_result.input_data.specification.extras["important"] == entry
+
+
+def test_gfn2xtb_gradient(qcsk_version: int):
+    """Use QCSchema to perform a GFN2-xTB calculation on a mindless molecule"""
+    thr = 1.0e-7
+
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("mindless_gfn2"),
+        driver="gradient",
+        method="GFN2-xTB",
+    )
     dipole_moment = np.array(
         [ 0.1965142200947483, -0.8278681912495578, -1.9355888893816835]
     )
@@ -207,33 +395,15 @@ def test_gfn2xtb_gradient():
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
-def test_gfn1xtb_hessian():
+def test_gfn1xtb_hessian(qcsk_version: int):
     """Hessian not available from API, should fail"""
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule = {
-            "symbols": [
-                "C", "C", "C", "C", "N", "C", "S", "H", "H", "H", "H", "H",
-            ],
-            "geometry": [
-                -2.56745685564671, -0.02509985979910,  0.00000000000000,
-                -1.39177582455797,  2.27696188880014,  0.00000000000000,
-                 1.27784995624894,  2.45107479759386,  0.00000000000000,
-                 2.62801937615793,  0.25927727028120,  0.00000000000000,
-                 1.41097033661123, -1.99890996077412,  0.00000000000000,
-                -1.17186102298849, -2.34220576284180,  0.00000000000000,
-                -2.39505990368378, -5.22635838332362,  0.00000000000000,
-                 2.41961980455457, -3.62158019253045,  0.00000000000000,
-                -2.51744374846065,  3.98181713686746,  0.00000000000000,
-                 2.24269048384775,  4.24389473203647,  0.00000000000000,
-                 4.66488984573956,  0.17907568006409,  0.00000000000000,
-                -4.60044244782237, -0.17794734637413,  0.00000000000000,
-            ],
-        },
-        driver = "hessian",
-        model = {
-            "method": "GFN1-xTB",
-        },
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("cns_hessian"),
+        driver="hessian",
+        method="GFN1-xTB",
+        qcel_object=True,
     )
 
     atomic_result = run_qcschema(atomic_input)
@@ -241,44 +411,16 @@ def test_gfn1xtb_hessian():
     assert not atomic_result.success
 
 
-def test_gfn2xtb_properties():
-    """Also test properties run type once, should just return everything
-    available as a dict"""
+def test_gfn2xtb_properties(qcsk_version: int):
+    """Also test properties run type once, should just return everything available as a dict"""
     thr = 1.0e-5
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule = {
-            "symbols": [
-                "Li", "Li", "Li", "Li", "C", "C", "C", "C",
-                "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H",
-            ],
-            "geometry": [
-                 1.58746019997201, -1.58746019997201,  1.58746019997201,
-                -1.58746019997201,  1.58746019997201,  1.58746019997201,
-                -1.58746019997201, -1.58746019997201, -1.58746019997201,
-                 1.58746019997201,  1.58746019997201, -1.58746019997201,
-                -2.38500089414639, -2.38500089414639,  2.38500089414639,
-                 2.38500089414639, -2.38500089414639, -2.38500089414639,
-                -2.38500089414639,  2.38500089414639, -2.38500089414639,
-                 2.38500089414639,  2.38500089414639,  2.38500089414639,
-                -4.43487372589517, -2.13523102374668,  2.13523102374668,
-                -2.13523102374668, -4.43487372589517,  2.13523102374668,
-                -2.13523102374668, -2.13523102374668,  4.43487372589517,
-                 2.13523102374668,  4.43487372589517,  2.13523102374668,
-                 2.13523102374668,  2.13523102374668,  4.43487372589517,
-                 4.43487372589517,  2.13523102374668,  2.13523102374668,
-                 2.13523102374668, -2.13523102374668, -4.43487372589517,
-                 4.43487372589517, -2.13523102374668, -2.13523102374668,
-                 2.13523102374668, -4.43487372589517, -2.13523102374668,
-                -2.13523102374668,  2.13523102374668, -4.43487372589517,
-                -4.43487372589517,  2.13523102374668, -2.13523102374668,
-                -2.13523102374668,  4.43487372589517, -2.13523102374668,
-            ],
-        },
-        driver = "properties",
-        model = {
-            "method": "GFN2-xTB",
-        },
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("li4c4h12"),
+        driver="properties",
+        method="GFN2-xTB",
+        qcel_object=True,
     )
     charges = np.array([
          0.45632539,  0.45632539,  0.45632539,  0.45632539, -0.45436293,
@@ -290,37 +432,34 @@ def test_gfn2xtb_properties():
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.return_result['mulliken_charges'], abs=thr) == charges
+    assert approx(atomic_result.return_result["mulliken_charges"], abs=thr) == charges
 
 
-def test_gfn2xtb_error():
+def test_gfn2xtb_error(qcsk_version: int):
     """Pass some cold fusion input to xtb, see how this turns out.
 
     xtb should be perfectly capable of detecting and rejecting this input
-    by itself"""
+    by itself
+    """
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule = {
-            "symbols": [
-                "Li", "Li", "Li", "Li",
-            ],
-            "geometry": [
-                -1.58746019997201,  1.58746019997201,  1.58746019997201,
-                -1.58746019997201,  1.58746019997201,  1.58746019997201,
-                -1.58746019997201, -1.58746019997201, -1.58746019997201,
-                 1.58746019997201,  1.58746019997201, -1.58746019997201,
-            ],
-            "validated": True,  # Force a nuclear fusion input, to make xtb fail
-        },
-        driver = "properties",
-        model = {
-            "method": "GFN2-xTB",
-        },
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("cold_fusion"),
+        driver="properties",
+        method="GFN2-xTB",
+        qcel_object=True,
     )
-    error = qcel.models.ComputeError(
-        error_type='runtime_error',
-        error_message='Setup of molecular structure failed:\n-1- xtb_api_newMolecule: Could not generate molecular structure',
+
+    error = dict(
+        error_type="runtime_error",
+        error_message="Setup of molecular structure failed:\n-1- xtb_api_newMolecule: Could not generate molecular structure",
     )
+    if qcsk_version == 1:
+        error = qcel_v1.ComputeError(**error)
+    elif qcsk_version == 2:
+        error = qcel_v2.ComputeError(**error)
+    else:
+        raise RuntimeError(f"QCSchema v{qcsk_version} NYI")
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -328,38 +467,27 @@ def test_gfn2xtb_error():
     assert atomic_result.error == error
 
 
-def test_unknown_method():
+def test_unknown_method(qcsk_version: int):
     """Select an unknown method in the atomic input"""
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule = {
-            "symbols": [
-                "C", "C", "C", "C", "N", "C", "S", "H", "H", "H", "H", "H",
-            ],
-            "geometry": [
-                -2.56745685564671, -0.02509985979910,  0.00000000000000,
-                -1.39177582455797,  2.27696188880014,  0.00000000000000,
-                 1.27784995624894,  2.45107479759386,  0.00000000000000,
-                 2.62801937615793,  0.25927727028120,  0.00000000000000,
-                 1.41097033661123, -1.99890996077412,  0.00000000000000,
-                -1.17186102298849, -2.34220576284180,  0.00000000000000,
-                -2.39505990368378, -5.22635838332362,  0.00000000000000,
-                 2.41961980455457, -3.62158019253045,  0.00000000000000,
-                -2.51744374846065,  3.98181713686746,  0.00000000000000,
-                 2.24269048384775,  4.24389473203647,  0.00000000000000,
-                 4.66488984573956,  0.17907568006409,  0.00000000000000,
-                -4.60044244782237, -0.17794734637413,  0.00000000000000,
-            ],
-        },
-        driver = "energy",
-        model = {
-            "method": "GFN-xTB",  # GFN-xTB should be GFN1-xTB
-        },
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("cns_hessian"),
+        driver="energy",
+        method="GFN-xTB",
+        qcel_object=True,
     )
-    error = qcel.models.ComputeError(
-        error_type='input_error',
-        error_message='Invalid method GFN-xTB provided in model',
+
+    error = dict(
+        error_type="input_error",
+        error_message="Invalid method GFN-xTB provided in model",
     )
+    if qcsk_version == 1:
+        error = qcel_v1.ComputeError(**error)
+    elif qcsk_version == 2:
+        error = qcel_v2.ComputeError(**error)
+    else:
+        raise RuntimeError(f"QCSchema v{qcsk_version} NYI")
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -367,44 +495,20 @@ def test_unknown_method():
     assert atomic_result.error == error
 
 
-def test_gfn2xtb_solvation():
+def test_gfn2xtb_solvation(qcsk_version: int):
     """Solvate a kation of an ionic liquid with GFN2-xTB/GBSA"""
     thr = 1.0e-7
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule = {
-            "symbols": [
-                "C", "N", "C", "N", "C", "C", "C", "H",
-                "H", "H", "H", "H", "H", "H", "H", "H",
-            ],
-            "geometry": [
-                 0.048282499,     0.057183108,     0.173514640,
-                 0.048282499,     0.057183108,     2.785682877,
-                 2.460933466,     0.057183108,     3.599550067,
-                 3.991384751,    -0.221116838,     1.583647072,
-                 2.540755491,    -0.118599203,    -0.586344180,
-                -2.061048549,     0.828021237,     4.403571784,
-                 6.721736451,     0.210496578,     1.725659980,
-                 3.058786077,     0.070940314,     5.557211706,
-                 3.368228708,    -0.207680886,    -2.461916123,
-                -1.684652926,     0.148551360,    -0.921487085,
-                -3.836824062,     0.378984547,     3.432611673,
-                -1.962159188,    -0.217412975,     6.192197434,
-                -1.859660450,     2.870361499,     4.747464119,
-                 7.499472079,    -0.877758825,     3.310818833,
-                 7.584906591,    -0.429156772,    -0.047375431,
-                 7.008294500,     2.247696785,     2.037956097,
-            ],
-            "molecular_charge": +1,
-        },
-        driver = "energy",
-        model = {
-            "method": "GFN2-xTB",
-        },
-        keywords = {
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("cation"),
+        driver="energy",
+        method="GFN2-xTB",
+        keywords={
             "maxiter": 50,
             "solvent": "water",
         },
+        qcel_object=True,
     )
 
     atomic_result = run_qcschema(atomic_input)
@@ -413,34 +517,20 @@ def test_gfn2xtb_solvation():
     assert approx(atomic_result.return_result, abs=thr) == -20.8299331650115
 
 
-def test_gfn1xtb_solvation():
+def test_gfn1xtb_solvation(qcsk_version: int):
     """Solvate an anion of an ionic liquid with GFN1-xTB/GBSA"""
     thr = 1.0e-7
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule = {
-            "symbols": [
-                "O", "C", "C", "F", "O", "F", "H",
-            ],
-            "geometry": [
-                 4.877023733,    -3.909030492,     1.796260143,
-                 6.112318716,    -2.778558610,     0.091330457,
-                 7.360520527,    -4.445334728,    -1.932830640,
-                 7.978801077,    -6.767751279,    -1.031771494,
-                 6.374499300,    -0.460299457,    -0.213142194,
-                 5.637581753,    -4.819746139,    -3.831249370,
-                 9.040657008,    -3.585225944,    -2.750722946,
-            ],
-            "molecular_charge": -1,
-        },
-        driver = "energy",
-        model = {
-            "method": "GFN1-xTB",
-        },
-        keywords = {
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("anion"),
+        driver="energy",
+        method="GFN1-xTB",
+        keywords={
             "maxiter": 50,
             "solvent": "THF",
         },
+        qcel_object=True,
     )
 
     atomic_result = run_qcschema(atomic_input)
@@ -453,34 +543,16 @@ def test_gfn1xtb_solvation():
     pytest.param("muted", id="muted flag"),
     pytest.param(0, id="muted value")
 ])
-def test_verbosity(verbosity):
+def test_verbosity(qcsk_version: int, verbosity):
     """Make sure out put is only saved when requested."""
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule={
-            "symbols": [
-                "C", "C", "C", "C", "N", "C", "S", "H", "H", "H", "H", "H",
-            ],
-            "geometry": [
-                -2.56745685564671, -0.02509985979910, 0.00000000000000,
-                -1.39177582455797, 2.27696188880014, 0.00000000000000,
-                1.27784995624894, 2.45107479759386, 0.00000000000000,
-                2.62801937615793, 0.25927727028120, 0.00000000000000,
-                1.41097033661123, -1.99890996077412, 0.00000000000000,
-                -1.17186102298849, -2.34220576284180, 0.00000000000000,
-                -2.39505990368378, -5.22635838332362, 0.00000000000000,
-                2.41961980455457, -3.62158019253045, 0.00000000000000,
-                -2.51744374846065, 3.98181713686746, 0.00000000000000,
-                2.24269048384775, 4.24389473203647, 0.00000000000000,
-                4.66488984573956, 0.17907568006409, 0.00000000000000,
-                -4.60044244782237, -0.17794734637413, 0.00000000000000,
-            ],
-        },
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("cns_hessian"),
         driver="energy",
-        model={
-            "method": "GFN1-xTB",
-        },
-        keywords={"verbosity": verbosity}
+        method="GFN1-xTB",
+        keywords={"verbosity": verbosity},
+        qcel_object=True,
     )
 
     atomic_result = run_qcschema(atomic_input)

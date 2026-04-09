@@ -18,6 +18,7 @@
 project(
   'xtb-python',
   'c',
+  version: '26.1',
   license: 'LGPL-3.0-or-later',
   default_options: [
     'default_library=static',
@@ -28,8 +29,7 @@ install = true
 
 xtb_dep = dependency(
   'xtb',
-  version: '>=@0@'.format(meson.project_version()),
-  fallback: ['xtb-6.5.1', 'xtb_dep'],
+  fallback: ['xtb-6.7.1', 'xtb_dep'],
   default_options: [
     'default_library=static',
     'c_api=true',

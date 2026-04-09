@@ -60,9 +60,13 @@ from typing import List, Optional
 from ..utils import get_method, get_solvent
 from ..libxtb import VERBOSITY_MUTED
 from ..interface import Calculator, XTBException
-import ase.calculators.calculator as ase_calc
-from ase.atoms import Atoms
-from ase.units import Hartree, Bohr
+
+try:
+    import ase.calculators.calculator as ase_calc
+    from ase.atoms import Atoms
+    from ase.units import Hartree, Bohr
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("This submodule requires ASE installed")
 
 
 class XTB(ase_calc.Calculator):

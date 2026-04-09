@@ -1,5 +1,5 @@
 [build-system]
-requires = ["meson-python", "cffi"]
+requires = ["meson-python", "cffi", "setuptools"]
 build-backend = "mesonpy"
 
 [project]
@@ -14,16 +14,17 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "Programming Language :: Fortran",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.6",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering :: Chemistry",
   "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
    "cffi",
    "numpy",
@@ -35,4 +36,5 @@ optional-dependencies.test = [
   "pytest-cov",
   "ase",
   "qcelemental",
+  "setuptools",
 ]

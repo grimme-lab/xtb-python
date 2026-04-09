@@ -9,21 +9,23 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup Python
-      uses: mamba-org/provision-with-micromamba@main
+      uses: mamba-org/setup-micromamba@v3
       with:
         environment-file: environment.yml
-        extra-specs: |
-          meson-python
-          python-build
+        create-args: >-
+          meson-python python-build
+          xtb
+          qcelemental
     - run: |
+        export PKG_CONFIG_PATH="$CONDA_PREFIX/lib/pkgconfig:$CONDA_PREFIX/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
         python -m build . --sdist --outdir . -n ${{ env.SETUP_ARGS }}
       env:
         SETUP_ARGS: >-
-          -Csetup-args=-Dxtb-6.5.1:la_backend=netlib
+          -Csetup-args=-Dxtb-6.7.1:la_backend=netlib
           -Csetup-args=-Dmctc-lib:json=disabled
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v7
       with:
         name: xtb-python-sdist
         path: ./*.tar.gz
@@ -37,98 +39,123 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup Python
-      uses: mamba-org/provision-with-micromamba@main
+      uses: mamba-org/setup-micromamba@v3
       with:
         environment-file: environment.yml
-        extra-specs: |
-          c-compiler
-          fortran-compiler
-          meson-python
+        create-args: >-
           python=${{ matrix.python }}
-          pytest
+          c-compiler fortran-compiler meson-python pytest
+          xtb
+          ${{ (matrix.python == '3.14' || matrix.python == '3.13') && 'conda-forge/label/qcelemental_dev::qcelemental>=0.50.0rc3' || 'qcelemental' }}
 
     - name: Setup build of extension module
       run: |
         pip3 install . ${{ env.SETUP_ARGS }}
       env:
         SETUP_ARGS: >-
-          --config-settings setup-args=-Dxtb-6.5.1:la_backend=netlib
+          --config-settings setup-args=-Dpkg_config_path=$CONDA_PREFIX/lib/pkgconfig
+          --config-settings setup-args=-Dxtb-6.7.1:la_backend=netlib
 
     - name: Test Python package
       run: pytest -v --pyargs xtb
       env:
         OMP_NUM_THREADS: 2,1
 
-  manylinux:
+  wheels:
     needs:
       - sdist
-    runs-on: ubuntu-latest
-    container: condaforge/linux-anvil-cos7-x86_64
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        os:
+          - ubuntu-latest
+        python: ["38", "39", "310", "311", "312", "313", "314"]
+        include:
+          - os: ubuntu-latest
+            archs_linux: x86_64
 
     defaults:
       run:
-        shell: ${{ matrix.shell || 'bash -l {0}' }}
+        shell: bash -l {0}
 
     steps:
-    - name: Create environment
-      run: >-
-        mamba create -n wheel
-        --yes
-        c-compiler
-        fortran-compiler
-        python=${{ matrix.python }}
-        auditwheel
-        git
-        python-build
-        pkg-config
-        patchelf
-        cffi
-        numpy
-        meson
-        unzip
-        wheel
-        xtb
-    - name: Download sdist
-      uses: actions/download-artifact@v2
-      with:
-        name: xtb-python-sdist
-    - name: Build wheel
-      run: |
-        conda activate wheel
-        set -ex
-        tar xvf xtb-*.tar.gz
-        python -m build xtb-*/ --wheel ${{ env.SETUP_ARGS }}
-        auditwheel show xtb-*/dist/*.whl
-        auditwheel repair -w . xtb-*/dist/*.whl --plat ${{ env.plat }}
-      env:
-        plat: manylinux${{ matrix.python == '3.6' && '2010' || '_2_12' }}_x86_64
-        SETUP_ARGS: >-
-          -Csetup-args=-Dxtb-6.5.1:la_backend=netlib
-          -Csetup-args=-Dmctc-lib:json=disabled
-    - uses: actions/upload-artifact@v3
-      with:
-        name: xtb-python-${{ matrix.python }}
-        path: ./*.whl
-        retention-days: 5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Install cibuildwheel
+        run: python -m pip install "cibuildwheel>=3"
+
+      - name: Download sdist
+        uses: actions/download-artifact@v8
+        with:
+          name: xtb-python-sdist
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir . *.tar.gz
+        env:
+          CIBW_BUILD: "cp${{ matrix.python }}-*"
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_SKIP: "*musllinux*"
+          CIBW_ARCHS_LINUX: ${{ matrix.archs_linux || '' }}
+
+          CIBW_BEFORE_BUILD_LINUX: >
+            which python &&
+            python -V &&
+            echo "$PATH" &&
+            pkg-config --modversion xtb &&
+            pkg-config --cflags --libs xtb
+
+          # Linux setup inside the manylinux container
+          CIBW_BEFORE_ALL_LINUX: >
+            yum install -y pkgconfig &&
+            curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest |
+            tar -xvj bin/micromamba &&
+            ./bin/micromamba create -y -p /opt/conda-env
+            -c conda-forge
+            python
+            cffi
+            numpy
+            meson
+            ninja
+            pkg-config
+            xtb
+
+          # Pass host env vars through when needed
+          CIBW_ENVIRONMENT_PASS_LINUX: PKG_CONFIG_PATH
+
+          # Configure the build inside the Linux wheel container
+          CIBW_ENVIRONMENT_LINUX: >
+            PKG_CONFIG_PATH="/opt/conda-env/lib/pkgconfig:/opt/conda-env/share/pkgconfig"
+            XTBPATH="/opt/conda-env/share/xtb"
+            LD_LIBRARY_PATH="/opt/conda-env/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+            PIP_CONFIG_SETTINGS="setup-args=-Dpkg_config_path=/opt/conda-env/lib/pkgconfig setup-args=-Dxtb-6.7.1:la_backend=netlib setup-args=-Dmctc-lib:json=disabled"
+
+          # If xtb links shared libraries that need bundling, keep auditwheel repair enabled.
+          # If the package ends up fully self-contained / static, the default repair is still fine.
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel repair -w {dest_dir} {wheel}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xtb-python-${{ matrix.os }}-${{ matrix.python }}
+          path: ./*.whl
+          retention-days: 5
 
   release:
     needs:
       - sdist
-      - manylinux
+      - wheels
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v8
         with:
           path: ${{ github.workspace }}  # This will download all files
 

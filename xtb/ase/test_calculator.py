@@ -22,13 +22,19 @@
     energies in eV (while xtb is working internally in atomic units).
 """
 
-from xtb.ase.calculator import XTB
-from ase.atoms import Atoms
-from ase.calculators.calculator import CalculationFailed, InputError
-from pytest import approx, raises
+from pytest import approx, raises, mark
 import numpy as np
 
+try:
+    import ase
+    from xtb.ase.calculator import XTB
+    from ase.atoms import Atoms
+    from ase.calculators.calculator import CalculationFailed, InputError
+except ModuleNotFoundError:
+    ase = None
 
+
+@mark.skipif(ase is None, reason="requires ase")
 def test_gfn2_xtb_0d():
     """Test ASE interface to GFN2-xTB"""
     thr = 1.0e-5
@@ -97,6 +103,7 @@ def test_gfn2_xtb_0d():
     assert approx(atoms.get_potential_energy(), abs=thr) == -592.9940608761889
 
 
+@mark.skipif(ase is None, reason="requires ase")
 def test_gfn1_xtb_0d():
     """Test ASE interface to GFN1-xTB"""
     thr = 1.0e-5
@@ -156,6 +163,7 @@ def test_gfn1_xtb_0d():
     assert approx(atoms.get_dipole_moment(), abs=thr) == dipole_moment
 
 
+@mark.skipif(ase is None, reason="requires ase")
 def test_gfn1_xtb_3d():
     """Test ASE interface to GFN1-xTB"""
     thr = 5.0e-6
@@ -207,6 +215,7 @@ def test_gfn1_xtb_3d():
     assert approx(atoms.get_charges(), abs=thr) == charges
 
 
+@mark.skipif(ase is None, reason="requires ase")
 def test_gfn2_xtb_3d():
     """Test ASE interface to GFN2-xTB, should fail"""
     thr = 5.0e-6
@@ -246,6 +255,7 @@ def test_gfn2_xtb_3d():
         calc.calculate(atoms=atoms, system_changes=["positions"])
 
 
+@mark.skipif(ase is None, reason="requires ase")
 def test_invalid_method():
     """GFN-xTB without method number is invalid, should raise an input error"""
 

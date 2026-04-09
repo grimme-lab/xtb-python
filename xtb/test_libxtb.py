@@ -16,11 +16,11 @@
 # along with xtb.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from pkg_resources import parse_version
+from packaging.version import Version
 from xtb import API_VERSION
 from xtb.libxtb import get_api_version
 
 
 def test_api_version():
     """Ensure that the API version is compatible."""
-    assert parse_version(get_api_version()) >= parse_version(API_VERSION)
+    assert Version(get_api_version()) >= Version(API_VERSION)
